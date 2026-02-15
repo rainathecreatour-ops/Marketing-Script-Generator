@@ -32,22 +32,23 @@ export default function MarketingScriptGenerator() {
     }
   };
 
-  const generateScripts = async () => {
-    setIsGenerating(true);
-    setScripts([]);
+const generateScripts = async () => {
+  setIsGenerating(true);
+  setScripts([]);
 
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4000,
-          messages: [{
-            role: "user",
-            content: `You are a professional social media script writer. Generate ${scriptPrefs.numScripts} marketing video scripts based on the following:
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        messages: [{
+          role: "user",
+          content: `You are a professional social media script writer. Generate ${scriptPrefs.numScripts} marketing video scripts based on the following:
 
 BRAND INFO:
 - Brand Name: ${businessInfo.brandName}
@@ -71,7 +72,7 @@ For each script, provide:
 
 Each script should focus on different aspects of the business (e.g., problem/solution, testimonial style, feature highlight, behind-the-scenes, value proposition, etc.).
 
-Format your response as JSON ONLY (no markdown, no preamble):
+CRITICAL: Respond ONLY with valid JSON in this exact format (no markdown, no backticks, no preamble):
 {
   "scripts": [
     {
@@ -90,23 +91,73 @@ ${scriptPrefs.platform === 'tiktok' ? '- Fast-paced, trendy, authentic tone\n- U
 ${scriptPrefs.platform === 'instagram' ? '- Visual storytelling\n- Aesthetic focused\n- Strong first frame' : ''}
 ${scriptPrefs.platform === 'youtube' ? '- Longer form acceptable\n- Educational or entertainment value\n- Chapter markers if needed' : ''}
 ${scriptPrefs.platform === 'facebook' ? '- Community-focused\n- Shareable content\n- Value-driven' : ''}`
-          }],
-        })
-      });
+        }],
+      })
+    });
 
-      const data = await response.json();
-      const text = data.content.map(item => item.text || "").join("\n");
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      
-      setScripts(parsed.scripts || []);
-    } catch (err) {
-      console.error("Error generating scripts:", err);
-      alert("Failed to generate scripts. Please try again.");
-    } finally {
-      setIsGenerating(false);
+    console.log('Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', errorText);
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
-  };
+
+    const data = await response.json();
+    console.log('API Response:', data);
+
+    if (!data.content || !Array.isArray(data.content)) {
+      throw new Error('Invalid response format from API');
+    }
+
+    const text = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
+
+    console.log('Extracted text:', text);
+
+    if (!text.trim()) {
+      throw new Error('No text content in API response');
+    }
+
+    // Clean up the response - remove markdown code blocks if present
+    let clean = text.trim();
+    clean = clean.replace(/^```json\n?/i, '');
+    clean = clean.replace(/\n?```$/i, '');
+    clean = clean.trim();
+
+    console.log('Cleaned text:', clean);
+
+    const parsed = JSON.parse(clean);
+    
+    if (!parsed.scripts || !Array.isArray(parsed.scripts)) {
+      throw new Error('Response does not contain scripts array');
+    }
+
+    setScripts(parsed.scripts);
+    
+  } catch (err) {
+    console.error("Detailed error:", err);
+    
+    // More specific error messages
+    let errorMessage = "Failed to generate scripts. ";
+    
+    if (err.message.includes('fetch')) {
+      errorMessage += "Network error - please check your internet connection.";
+    } else if (err.message.includes('JSON')) {
+      errorMessage += "Invalid response format. Please try again.";
+    } else if (err.message.includes('API request failed')) {
+      errorMessage += "API error. The service might be temporarily unavailable.";
+    } else {
+      errorMessage += err.message || "Please try again.";
+    }
+    
+    alert(errorMessage);
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   const copyToClipboard = (text, index) => {
     navigator.clipboard.writeText(text);
