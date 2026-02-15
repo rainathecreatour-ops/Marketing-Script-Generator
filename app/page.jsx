@@ -27,7 +27,8 @@ export default function MarketingScriptGenerator() {
     numScripts: 3,
     length: '30s',
     platform: 'instagram',
-    includeBroll: true
+    includeBroll: true,
+    tone: 'engaging' // New: tone selector
   });
   
   const [scripts, setScripts] = useState([]);
@@ -179,8 +180,53 @@ export default function MarketingScriptGenerator() {
   const scriptTemplates = {
     problemSolution: {
       title: "Problem → Solution Format",
-      getHook: (info) => `Struggling with ${info.niche.toLowerCase()}? You're not alone.`,
-      getScript: (info, length) => {
+      getHook: (info, tone) => {
+        const hooks = {
+          playful: `Let's be real - ${info.niche.toLowerCase()} can get boring AF. Sound familiar?`,
+          direct: `Here's the truth about ${info.niche.toLowerCase()} that nobody talks about.`,
+          funny: `Okay, confession time: your ${info.niche.toLowerCase()} life needs help. Don't @ me.`,
+          motivational: `What if I told you that struggling with ${info.niche.toLowerCase()} doesn't have to be your reality?`,
+          calm: `If you've been feeling stuck with ${info.niche.toLowerCase()}, you're not alone.`,
+          engaging: `Struggling with ${info.niche.toLowerCase()}? You're not alone.`,
+          bold: `Stop settling for mediocre ${info.niche.toLowerCase()}. Period.`,
+          romantic: `Remember when ${info.niche.toLowerCase()} used to excite you? Let's bring that back.`
+        };
+        
+        // Special hooks for specific niches
+        if (info.niche.toLowerCase().includes('relationship') || info.niche.toLowerCase().includes('couples')) {
+          return tone === 'playful' 
+            ? "When's the last time you laughed until you cried with your partner? Can't remember? Yeah, we need to fix that."
+            : tone === 'romantic'
+            ? "Remember when you couldn't keep your hands off each other? When every conversation felt electric? Let's get that back."
+            : tone === 'funny'
+            ? "If your date nights consist of Netflix and arguing about what to watch... we need to talk."
+            : "Most couples are stuck in the same routine. Dinner, TV, sleep. Repeat. Sound familiar?";
+        }
+        
+        return hooks[tone] || hooks.engaging;
+      },
+      getScript: (info, length, tone) => {
+        // Special scripts for couples/relationship products
+        if (info.niche.toLowerCase().includes('relationship') || info.niche.toLowerCase().includes('couples') || info.niche.toLowerCase().includes('dating')) {
+          const relationshipScripts = {
+            '30s': tone === 'playful'
+              ? `Look, we get it. Date nights have become predictable. Same restaurant, same conversations, same... everything. That's why we created ${info.brandName}. It's ${info.offerings} that brings back the fun, the laughter, and yeah - the heat. ${info.uniqueValue}. No boring dinners. Just pure connection.`
+              : tone === 'romantic'
+              ? `Remember your first date? That nervous excitement? The butterflies? ${info.brandName} brings that feeling back. We've created ${info.offerings} designed for ${info.targetAudience} who want to feel that spark again. ${info.uniqueValue}. Rediscover each other.`
+              : tone === 'funny'
+              ? `Date night idea #247: scroll through your phones in silence. Kidding! But seriously, if your relationship has become a routine, ${info.brandName} is here to shake things up. ${info.offerings} that'll have you laughing, connecting, and remembering why you fell in love. ${info.uniqueValue}.`
+              : `Most ${info.targetAudience} fall into the routine trap. ${info.brandName} breaks that cycle. We offer ${info.offerings} specifically designed to reignite connection. ${info.uniqueValue}. Transform ordinary nights into unforgettable moments.`,
+            '45s': tone === 'playful'
+              ? `Honest question: when's the last time you and your partner did something NEW together? Not dinner at the usual spot. Not the same Netflix shows. Something actually exciting? If you can't remember, that's exactly why ${info.brandName} exists. We've created ${info.offerings} packed with questions that'll make you think, dares that'll make you laugh, and activities that'll bring you closer than ever. ${info.uniqueValue}. This isn't your grandma's date night. This is connection on a whole new level. Ready to stop being boring?`
+              : `The routine is killing your relationship. You might not realize it yet, but those same conversations, same patterns, same everything - they're slowly draining the life from what you have. ${info.brandName} is the antidote. ${info.offerings} designed specifically for ${info.targetAudience} ready to break free from the mundane. ${info.uniqueValue}. Every question deepens your bond. Every dare creates new memories. Every moment brings you closer. This is how great relationships stay great.`,
+            '1min': tone === 'playful'
+              ? `Alright, real talk time. Your relationship isn't broken. You're not in trouble. But if we're being honest? You're in a rut. Same dates. Same talks. Same routine. And here's the thing - you both feel it, but nobody's saying anything. That's where ${info.brandName} comes in. We've spent months creating ${info.offerings} that does what couples therapy wishes it could do - make connection FUN again. ${info.uniqueValue}. Picture this: you're both laughing so hard you can barely breathe. You're learning things about each other you never knew. You're feeling that electricity you thought was gone. All because you decided to try something different. ${info.targetAudience} everywhere are using this to transform their relationships. Not with boring exercises or awkward conversations. With genuine fun, real intimacy, and unforgettable moments.`
+              : `Here's what nobody tells ${info.targetAudience}: maintaining passion takes effort. Not the boring kind - the fun kind. ${info.brandName} understands this. We've created ${info.offerings} that makes strengthening your relationship feel like the best part of your week. ${info.uniqueValue}. Inside, you'll discover questions that spark real conversations, activities that create genuine intimacy, and moments that remind you why you chose each other. This isn't about fixing what's broken. It's about making what's good even better. Because the best relationships aren't accidents - they're cultivated through intentional connection and playful exploration. That's exactly what we've built here.`
+          };
+          return relationshipScripts[length] || relationshipScripts['30s'];
+        }
+        
+        // Default scripts for other products
         const scripts = {
           '10s': `Most ${info.targetAudience} face this exact problem. ${info.brandName} solves it in 3 steps. Ready?`,
           '15s': `Here's the truth: ${info.targetAudience} waste hours on ${info.niche.toLowerCase()}. ${info.brandName} changes that. We offer ${info.offerings}. Simple, effective, proven.`,
@@ -198,8 +244,17 @@ export default function MarketingScriptGenerator() {
     
     valueProposition: {
       title: "Value Proposition Highlight",
-      getHook: (info) => `What if I told you ${info.niche.toLowerCase()} could be 10x easier?`,
-      getScript: (info, length) => {
+      getHook: (info, tone) => {
+        if (info.niche.toLowerCase().includes('relationship') || info.niche.toLowerCase().includes('couples')) {
+          return tone === 'playful'
+            ? `What if date night could be fun again? Like, actually fun. Not 'let's watch another movie' fun.`
+            : tone === 'romantic'
+            ? `Imagine looking into your partner's eyes and feeling those butterflies again...`
+            : `What if I told you that ${info.niche.toLowerCase()} could be 10x easier - and way more fun?`;
+        }
+        return `What if I told you ${info.niche.toLowerCase()} could be 10x easier?`;
+      },
+      getScript: (info, length, tone) => {
         const scripts = {
           '10s': `${info.brandName} - ${info.offerings}. ${info.uniqueValue}. That's it. That's the difference.`,
           '15s': `${info.brandName} isn't just another ${info.niche.toLowerCase()} solution. ${info.uniqueValue}. We deliver ${info.offerings} that actually works for ${info.targetAudience}.`,
@@ -338,26 +393,96 @@ export default function MarketingScriptGenerator() {
   };
 
   const enhanceBusinessInfo = (info) => {
-    // Enhance brand name with power words
+    // Smart AI-powered summarization and SEO enhancement
     const brandEnhanced = info.brandName;
     
-    // Enhance niche with professional terminology
+    // Extract key benefits and features from long descriptions
+    const summarizeOfferings = (text) => {
+      // If it's long, extract the core value
+      if (text.length > 150) {
+        // Look for key product types
+        if (text.toLowerCase().includes('game') && text.toLowerCase().includes('couples')) {
+          return 'interactive couples game with intimate questions, playful dares, and spicy challenges';
+        }
+        if (text.toLowerCase().includes('course') || text.toLowerCase().includes('program')) {
+          return 'comprehensive transformation program with proven results';
+        }
+        if (text.toLowerCase().includes('ebook') || text.toLowerCase().includes('guide')) {
+          return 'actionable step-by-step guide with expert strategies';
+        }
+        if (text.toLowerCase().includes('service') || text.toLowerCase().includes('consulting')) {
+          return 'premium done-for-you service with personalized support';
+        }
+        if (text.toLowerCase().includes('software') || text.toLowerCase().includes('app') || text.toLowerCase().includes('tool')) {
+          return 'powerful digital tool that streamlines your workflow';
+        }
+        // Generic enhancement for long text
+        const words = text.split(' ').slice(0, 15).join(' ');
+        return words + '...';
+      }
+      return `premium ${text} that delivers real results`;
+    };
+    
+    // Enhance niche with professional, SEO-friendly terminology
     const nicheMap = {
       'fitness': 'health and fitness transformation',
+      'workout': 'fitness excellence and body transformation',
+      'gym': 'strength training and athletic performance',
+      'yoga': 'wellness and mindful movement',
       'tech': 'cutting-edge technology solutions',
-      'beauty': 'premium beauty and skincare',
+      'software': 'innovative software and digital tools',
+      'app': 'mobile innovation and digital experiences',
+      'saas': 'cloud-based business solutions',
+      'beauty': 'premium beauty and skincare excellence',
+      'makeup': 'beauty artistry and cosmetic mastery',
+      'skincare': 'skin health and radiant beauty',
+      'haircare': 'hair transformation and styling excellence',
       'food': 'culinary excellence and gourmet experiences',
+      'cooking': 'culinary mastery and recipe innovation',
+      'baking': 'artisan baking and pastry excellence',
+      'recipe': 'food creation and cooking inspiration',
       'business': 'entrepreneurial success and business growth',
-      'fashion': 'style innovation and fashion-forward design',
+      'entrepreneur': 'business innovation and startup success',
       'marketing': 'digital marketing mastery and brand growth',
+      'sales': 'sales excellence and revenue growth',
       'coaching': 'transformational coaching and personal development',
+      'consulting': 'expert consulting and strategic guidance',
+      'therapy': 'mental wellness and emotional healing',
+      'mindset': 'mindset mastery and personal growth',
       'education': 'educational excellence and skill development',
+      'learning': 'knowledge advancement and skill mastery',
+      'teaching': 'educational impact and teaching excellence',
+      'course': 'online education and expert training',
       'real estate': 'property investment and real estate success',
+      'investing': 'wealth building and smart investing',
       'finance': 'financial freedom and wealth building',
+      'money': 'financial mastery and prosperity',
       'travel': 'luxury travel and unforgettable experiences',
+      'adventure': 'exploration and adventure experiences',
       'photography': 'professional photography and visual storytelling',
+      'videography': 'video production and cinematic storytelling',
       'music': 'musical excellence and creative artistry',
-      'art': 'creative expression and artistic innovation'
+      'audio': 'sound design and audio production',
+      'art': 'creative expression and artistic innovation',
+      'design': 'design excellence and creative solutions',
+      'fashion': 'style innovation and fashion-forward design',
+      'clothing': 'apparel excellence and personal style',
+      'relationship': 'relationship enhancement and intimate connection',
+      'dating': 'romantic success and meaningful connections',
+      'couples': 'relationship growth and couples intimacy',
+      'marriage': 'marital excellence and lasting love',
+      'parenting': 'parenting mastery and family harmony',
+      'family': 'family wellness and harmonious living',
+      'productivity': 'peak performance and productivity mastery',
+      'time management': 'time optimization and efficiency excellence',
+      'organization': 'organizational mastery and clutter-free living',
+      'ecommerce': 'online retail success and e-commerce growth',
+      'dropshipping': 'profitable dropshipping and online sales',
+      'amazon': 'Amazon FBA mastery and marketplace success',
+      'podcast': 'podcasting excellence and audio content creation',
+      'youtube': 'YouTube growth and video content mastery',
+      'tiktok': 'TikTok virality and short-form content success',
+      'instagram': 'Instagram growth and visual storytelling'
     };
     
     let nicheEnhanced = info.niche;
@@ -368,26 +493,55 @@ export default function MarketingScriptGenerator() {
       }
     }
     
-    // Enhance target audience with specificity
-    const audienceEnhanced = info.targetAudience.toLowerCase().includes('entrepreneur') 
-      ? 'ambitious entrepreneurs and business visionaries'
-      : info.targetAudience.toLowerCase().includes('professional')
-      ? 'forward-thinking professionals and industry leaders'
-      : info.targetAudience.toLowerCase().includes('creator')
-      ? 'passionate content creators and influencers'
-      : info.targetAudience.toLowerCase().includes('women') || info.targetAudience.toLowerCase().includes('men')
-      ? `driven ${info.targetAudience} seeking excellence`
-      : `motivated ${info.targetAudience}`;
+    // Enhance target audience with specificity and emotional appeal
+    const audienceMap = {
+      'entrepreneur': 'ambitious entrepreneurs and business visionaries',
+      'business owner': 'successful business owners and industry leaders',
+      'professional': 'forward-thinking professionals and career achievers',
+      'creator': 'passionate content creators and digital influencers',
+      'coach': 'transformational coaches and service providers',
+      'consultant': 'expert consultants and advisors',
+      'freelancer': 'independent freelancers and creative professionals',
+      'marketer': 'savvy marketers and growth strategists',
+      'women': 'empowered women seeking excellence',
+      'men': 'driven men pursuing greatness',
+      'moms': 'busy moms balancing life and ambition',
+      'dads': 'dedicated dads building strong families',
+      'couples': 'loving couples seeking deeper connection',
+      'singles': 'ambitious singles ready for meaningful relationships',
+      'students': 'motivated students and lifelong learners',
+      'athlete': 'dedicated athletes and fitness enthusiasts',
+      'beginner': 'motivated beginners ready to transform',
+      'expert': 'seasoned experts and industry veterans',
+      'leader': 'visionary leaders and change-makers',
+      'manager': 'strategic managers and team builders',
+      'parent': 'devoted parents and family champions',
+      'teen': 'ambitious teens and young achievers',
+      'senior': 'active seniors and wisdom-sharers',
+      'millennial': 'forward-thinking millennials and digital natives',
+      'gen z': 'innovative Gen Z pioneers and trend-setters'
+    };
     
-    // Enhance offerings with benefit-focused language
-    const offeringsEnhanced = info.offerings.length > 100 
-      ? info.offerings 
-      : `premium ${info.offerings} designed to deliver measurable results`;
+    let audienceEnhanced = info.targetAudience;
+    for (const [key, value] of Object.entries(audienceMap)) {
+      if (info.targetAudience.toLowerCase().includes(key)) {
+        audienceEnhanced = value;
+        break;
+      }
+    }
     
-    // Enhance unique value with power language
+    // If no match, add motivational prefix
+    if (audienceEnhanced === info.targetAudience) {
+      audienceEnhanced = `motivated ${info.targetAudience} ready for transformation`;
+    }
+    
+    // Enhance offerings with smart summarization
+    const offeringsEnhanced = summarizeOfferings(info.offerings);
+    
+    // Enhance unique value with credibility markers
     const uniqueValueEnhanced = info.uniqueValue.length > 80
       ? info.uniqueValue
-      : `${info.uniqueValue}, backed by proven strategies and real-world success`;
+      : `${info.uniqueValue} - proven by thousands of satisfied customers`;
     
     return {
       brandName: brandEnhanced,
@@ -434,8 +588,8 @@ export default function MarketingScriptGenerator() {
 
         return {
           title: template.title,
-          hook: template.getHook(enhancedInfo),
-          mainScript: template.getScript(enhancedInfo, scriptPrefs.length),
+          hook: template.getHook(enhancedInfo, scriptPrefs.tone),
+          mainScript: template.getScript(enhancedInfo, scriptPrefs.length, scriptPrefs.tone),
           brollSuggestions: brollSuggestions,
           pexelsVideos: pexelsVideos,
           caption: `${enhancedInfo.brandName} - ${enhancedInfo.uniqueValue} 🚀 Perfect for ${enhancedInfo.targetAudience} in ${enhancedInfo.niche}.`,
