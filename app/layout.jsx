@@ -1,16 +1,11 @@
 import './globals.css'
-import type { Metadata } from 'next'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Marketing Script Generator - AI-Powered Social Media Scripts',
   description: 'Generate professional marketing scripts for TikTok, Instagram, YouTube, and Facebook with AI',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>{children}</body>
