@@ -1,11 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Camera, Sparkles, Lock, Copy, Check, RefreshCw, Video } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Camera, Sparkles, Lock, Copy, Check, RefreshCw, Video, Save, Edit2, User, Hash, Monitor, ChevronDown, Star, Play, Pause, X, Plus, Trash2 } from 'lucide-react';
 
 export default function MarketingScriptGenerator() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [licenseKey, setLicenseKey] = useState('');
+  const [currentView, setCurrentView] = useState('generate'); // 'generate', 'saved', 'teleprompter'
+  
+  // Brand Profiles
+  const [brandProfiles, setBrandProfiles] = useState([]);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  
   const [businessInfo, setBusinessInfo] = useState({
     brandName: '',
     niche: '',
@@ -14,21 +22,98 @@ export default function MarketingScriptGenerator() {
     uniqueValue: '',
     additionalInfo: ''
   });
+  
   const [scriptPrefs, setScriptPrefs] = useState({
     numScripts: 3,
     length: '30s',
     platform: 'instagram',
     includeBroll: true
   });
+  
   const [scripts, setScripts] = useState([]);
+  const [savedScripts, setSavedScripts] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [editingScript, setEditingScript] = useState(null);
+  
+  // Teleprompter
+  const [teleprompterScript, setTeleprompterScript] = useState(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [scrollSpeed, setScrollSpeed] = useState(2);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  // Load saved data on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('savedScripts');
+    if (saved) setSavedScripts(JSON.parse(saved));
+    
+    const profiles = localStorage.getItem('brandProfiles');
+    if (profiles) setBrandProfiles(JSON.parse(profiles));
+  }, []);
+
+  // Save to localStorage when savedScripts changes
+  useEffect(() => {
+    localStorage.setItem('savedScripts', JSON.stringify(savedScripts));
+  }, [savedScripts]);
+
+  // Save profiles to localStorage
+  useEffect(() => {
+    localStorage.setItem('brandProfiles', JSON.stringify(brandProfiles));
+  }, [brandProfiles]);
+
+  // Auto-scroll for teleprompter
+  useEffect(() => {
+    let interval;
+    if (isScrolling && teleprompterScript) {
+      interval = setInterval(() => {
+        setScrollPosition(prev => prev + scrollSpeed);
+      }, 50);
+    }
+    return () => clearInterval(interval);
+  }, [isScrolling, scrollSpeed, teleprompterScript]);
 
   const handleLicenseSubmit = () => {
     if (licenseKey.length >= 10) {
       setIsUnlocked(true);
     } else {
       alert('Invalid license key. Please enter a valid key.');
+    }
+  };
+
+  const saveProfile = () => {
+    if (!newProfileName.trim()) {
+      alert('Please enter a profile name');
+      return;
+    }
+    
+    const profile = {
+      id: Date.now(),
+      name: newProfileName,
+      ...businessInfo
+    };
+    
+    setBrandProfiles([...brandProfiles, profile]);
+    setNewProfileName('');
+    alert(`Profile "${newProfileName}" saved!`);
+  };
+
+  const loadProfile = (profile) => {
+    setBusinessInfo({
+      brandName: profile.brandName,
+      niche: profile.niche,
+      targetAudience: profile.targetAudience,
+      offerings: profile.offerings,
+      uniqueValue: profile.uniqueValue,
+      additionalInfo: profile.additionalInfo
+    });
+    setSelectedProfile(profile);
+    setShowProfileDropdown(false);
+  };
+
+  const deleteProfile = (id) => {
+    if (confirm('Delete this profile?')) {
+      setBrandProfiles(brandProfiles.filter(p => p.id !== id));
+      if (selectedProfile?.id === id) setSelectedProfile(null);
     }
   };
 
@@ -42,12 +127,52 @@ export default function MarketingScriptGenerator() {
       additionalInfo: ''
     });
     setScripts([]);
-    setScriptPrefs({
-      numScripts: 3,
-      length: '30s',
-      platform: 'instagram',
-      includeBroll: true
-    });
+    setSelectedProfile(null);
+  };
+
+  const saveScript = (script) => {
+    const scriptWithId = {
+      ...script,
+      id: Date.now(),
+      savedAt: new Date().toISOString(),
+      brandName: businessInfo.brandName
+    };
+    setSavedScripts([scriptWithId, ...savedScripts]);
+    alert('Script saved!');
+  };
+
+  const deleteSavedScript = (id) => {
+    if (confirm('Delete this saved script?')) {
+      setSavedScripts(savedScripts.filter(s => s.id !== id));
+    }
+  };
+
+  const generateHashtags = (info, platform) => {
+    const baseHashtags = [
+      `#${info.niche.replace(/\s/g, '')}`,
+      `#${info.targetAudience.replace(/\s/g, '')}`,
+      `#${platform}`,
+      '#contentcreator',
+      '#marketing'
+    ];
+
+    const nicheSpecific = {
+      'fitness': ['#fitnessmotivation', '#workout', '#healthylifestyle', '#fitfam'],
+      'tech': ['#technology', '#innovation', '#digital', '#techlife'],
+      'beauty': ['#beautytips', '#skincare', '#makeup', '#beautycommunity'],
+      'food': ['#foodie', '#cooking', '#recipe', '#foodporn'],
+      'business': ['#entrepreneur', '#businesstips', '#success', '#hustle'],
+      'fashion': ['#fashionista', '#style', '#ootd', '#fashionblogger']
+    };
+
+    const niche = info.niche.toLowerCase();
+    const additional = Object.keys(nicheSpecific).find(key => niche.includes(key));
+    
+    if (additional) {
+      baseHashtags.push(...nicheSpecific[additional].slice(0, 5));
+    }
+
+    return [...new Set(baseHashtags)].slice(0, 10);
   };
 
   const scriptTemplates = {
@@ -239,13 +364,16 @@ export default function MarketingScriptGenerator() {
           pexelsVideos = await fetchPexelsVideos(keywords);
         }
 
+        const hashtags = generateHashtags(businessInfo, scriptPrefs.platform);
+
         return {
           title: template.title,
           hook: template.getHook(businessInfo),
           mainScript: template.getScript(businessInfo, scriptPrefs.length),
           brollSuggestions: brollSuggestions,
           pexelsVideos: pexelsVideos,
-          caption: `${businessInfo.brandName} - ${businessInfo.uniqueValue} 🚀 Perfect for ${businessInfo.targetAudience} in ${businessInfo.niche}. #${businessInfo.niche.replace(/\s/g, '')} #${scriptPrefs.platform} #contentcreator`,
+          caption: `${businessInfo.brandName} - ${businessInfo.uniqueValue} 🚀 Perfect for ${businessInfo.targetAudience} in ${businessInfo.niche}.`,
+          hashtags: hashtags,
           cta: template.getCTA(businessInfo)
         };
       }));
@@ -294,10 +422,30 @@ ${script.pexelsVideos.map((v, i) => `${i + 1}. ${v.url}`).join('\n')}
     formatted += `📱 CAPTION:
 ${script.caption}
 
+🏷️ HASHTAGS:
+${script.hashtags?.join(' ') || ''}
+
 🎯 CTA:
 ${script.cta}`;
 
     return formatted;
+  };
+
+  const updateEditingScript = (field, value) => {
+    setEditingScript({
+      ...editingScript,
+      [field]: value
+    });
+  };
+
+  const saveEditedScript = () => {
+    const index = scripts.findIndex(s => s === editingScript);
+    if (index !== -1) {
+      const newScripts = [...scripts];
+      newScripts[index] = editingScript;
+      setScripts(newScripts);
+    }
+    setEditingScript(null);
   };
 
   if (!isUnlocked) {
@@ -339,291 +487,578 @@ ${script.cta}`;
     );
   }
 
+  // Teleprompter View
+  if (currentView === 'teleprompter' && teleprompterScript) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col">
+        <div className="bg-gray-900 p-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold">Teleprompter Mode</h1>
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <label className="text-sm">Speed:</label>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                value={scrollSpeed}
+                onChange={(e) => setScrollSpeed(parseInt(e.target.value))}
+                className="w-24"
+              />
+            </div>
+            <button
+              onClick={() => setIsScrolling(!isScrolling)}
+              className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition flex items-center gap-2"
+            >
+              {isScrolling ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {isScrolling ? 'Pause' : 'Play'}
+            </button>
+            <button
+              onClick={() => {
+                setTeleprompterScript(null);
+                setCurrentView('generate');
+                setScrollPosition(0);
+                setIsScrolling(false);
+              }}
+              className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Exit
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-hidden relative">
+          <div
+            className="absolute inset-0 px-12 pt-12"
+            style={{ transform: `translateY(-${scrollPosition}px)` }}
+          >
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-4xl font-bold mb-8">{teleprompterScript.title}</h2>
+              <p className="text-5xl leading-relaxed mb-12">{teleprompterScript.hook}</p>
+              <p className="text-5xl leading-relaxed whitespace-pre-line">{teleprompterScript.mainScript}</p>
+              <p className="text-5xl leading-relaxed mt-12 font-bold text-purple-400">{teleprompterScript.cta}</p>
+            </div>
+          </div>
+          <div className="absolute inset-x-0 top-1/2 h-1 bg-purple-500 opacity-50"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-6 px-4 shadow-lg">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Sparkles className="w-8 h-8" />
-              Marketing Script Generator
-            </h1>
-            <p className="text-purple-100 mt-1">AI-powered scripts for your brand</p>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <Sparkles className="w-8 h-8" />
+                Marketing Script Generator
+              </h1>
+              <p className="text-purple-100 mt-1">AI-powered scripts for your brand</p>
+            </div>
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Reset All
+            </button>
           </div>
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Reset All
-          </button>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentView('generate')}
+              className={`px-4 py-2 rounded-lg transition ${currentView === 'generate' ? 'bg-white text-purple-600' : 'bg-white/20 hover:bg-white/30'}`}
+            >
+              Generate Scripts
+            </button>
+            <button
+              onClick={() => setCurrentView('saved')}
+              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${currentView === 'saved' ? 'bg-white text-purple-600' : 'bg-white/20 hover:bg-white/30'}`}
+            >
+              <Save className="w-4 h-4" />
+              Saved Scripts ({savedScripts.length})
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto p-6">
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        {currentView === 'saved' ? (
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">Business Profile</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Brand Name *
-                </label>
-                <input
-                  type="text"
-                  value={businessInfo.brandName}
-                  onChange={(e) => setBusinessInfo({...businessInfo, brandName: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                  placeholder="Your brand name"
-                />
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Saved Scripts</h2>
+            {savedScripts.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No saved scripts yet. Generate some scripts and save your favorites!</p>
+            ) : (
+              <div className="space-y-4">
+                {savedScripts.map((script) => (
+                  <div key={script.id} className="border-2 border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-xl font-bold text-purple-600">{script.title}</h3>
+                        <p className="text-sm text-gray-500">{script.brandName} • {new Date(script.savedAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setTeleprompterScript(script);
+                            setCurrentView('teleprompter');
+                          }}
+                          className="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition flex items-center gap-1"
+                        >
+                          <Monitor className="w-4 h-4" />
+                          Teleprompter
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(formatScript(script), script.id)}
+                          className="px-3 py-1 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition flex items-center gap-1"
+                        >
+                          {copiedIndex === script.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          Copy
+                        </button>
+                        <button
+                          onClick={() => deleteSavedScript(script.id)}
+                          className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition flex items-center gap-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm"><strong>Hook:</strong> {script.hook}</p>
+                      <p className="text-sm"><strong>Script:</strong> {script.mainScript.substring(0, 200)}...</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Niche *
-                </label>
-                <input
-                  type="text"
-                  value={businessInfo.niche}
-                  onChange={(e) => setBusinessInfo({...businessInfo, niche: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                  placeholder="e.g., Fitness, Tech, Beauty"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Target Audience *
-                </label>
-                <input
-                  type="text"
-                  value={businessInfo.targetAudience}
-                  onChange={(e) => setBusinessInfo({...businessInfo, targetAudience: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                  placeholder="Who are you targeting?"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  What You Offer *
-                </label>
-                <textarea
-                  value={businessInfo.offerings}
-                  onChange={(e) => setBusinessInfo({...businessInfo, offerings: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                  placeholder="Products, services, solutions..."
-                  rows="3"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Unique Value Proposition *
-                </label>
-                <textarea
-                  value={businessInfo.uniqueValue}
-                  onChange={(e) => setBusinessInfo({...businessInfo, uniqueValue: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                  placeholder="What makes you different?"
-                  rows="2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Additional Info
-                </label>
-                <textarea
-                  value={businessInfo.additionalInfo}
-                  onChange={(e) => setBusinessInfo({...businessInfo, additionalInfo: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                  placeholder="Anything else we should know?"
-                  rows="2"
-                />
-              </div>
-            </div>
+            )}
           </div>
-
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">Script Preferences</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Number of Scripts: {scriptPrefs.numScripts}
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={scriptPrefs.numScripts}
-                  onChange={(e) => setScriptPrefs({...scriptPrefs, numScripts: parseInt(e.target.value)})}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>1</span>
-                  <span>5</span>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-gray-800">Business Profile</h2>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition"
+                    >
+                      <User className="w-4 h-4" />
+                      Profiles
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    
+                    {showProfileDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                        <div className="p-3 border-b">
+                          <input
+                            type="text"
+                            placeholder="Profile name..."
+                            value={newProfileName}
+                            onChange={(e) => setNewProfileName(e.target.value)}
+                            className="w-full px-2 py-1 border rounded mb-2 text-sm"
+                          />
+                          <button
+                            onClick={saveProfile}
+                            className="w-full px-2 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 flex items-center justify-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Save Current
+                          </button>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto">
+                          {brandProfiles.length === 0 ? (
+                            <p className="text-gray-500 text-sm p-3">No saved profiles</p>
+                          ) : (
+                            brandProfiles.map(profile => (
+                              <div key={profile.id} className="flex items-center justify-between p-2 hover:bg-gray-50">
+                                <button
+                                  onClick={() => loadProfile(profile)}
+                                  className="flex-1 text-left text-sm"
+                                >
+                                  {profile.name}
+                                </button>
+                                <button
+                                  onClick={() => deleteProfile(profile.id)}
+                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {selectedProfile && (
+                  <div className="mb-4 p-2 bg-purple-50 rounded-lg text-sm text-purple-700">
+                    Loaded: {selectedProfile.name}
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Brand Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={businessInfo.brandName}
+                      onChange={(e) => setBusinessInfo({...businessInfo, brandName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Your brand name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Niche *
+                    </label>
+                    <input
+                      type="text"
+                      value={businessInfo.niche}
+                      onChange={(e) => setBusinessInfo({...businessInfo, niche: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="e.g., Fitness, Tech, Beauty"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Target Audience *
+                    </label>
+                    <input
+                      type="text"
+                      value={businessInfo.targetAudience}
+                      onChange={(e) => setBusinessInfo({...businessInfo, targetAudience: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Who are you targeting?"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      What You Offer *
+                    </label>
+                    <textarea
+                      value={businessInfo.offerings}
+                      onChange={(e) => setBusinessInfo({...businessInfo, offerings: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Products, services, solutions..."
+                      rows="3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Unique Value Proposition *
+                    </label>
+                    <textarea
+                      value={businessInfo.uniqueValue}
+                      onChange={(e) => setBusinessInfo({...businessInfo, uniqueValue: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="What makes you different?"
+                      rows="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Additional Info
+                    </label>
+                    <textarea
+                      value={businessInfo.additionalInfo}
+                      onChange={(e) => setBusinessInfo({...businessInfo, additionalInfo: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Anything else we should know?"
+                      rows="2"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Video Length
-                </label>
-                <select
-                  value={scriptPrefs.length}
-                  onChange={(e) => setScriptPrefs({...scriptPrefs, length: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                >
-                  <option value="10s">10 seconds</option>
-                  <option value="15s">15 seconds</option>
-                  <option value="30s">30 seconds</option>
-                  <option value="45s">45 seconds</option>
-                  <option value="1min">1 minute</option>
-                  <option value="1min15s">1 minute 15 seconds</option>
-                  <option value="1min30s">1 minute 30 seconds</option>
-                </select>
-              </div>
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">Script Preferences</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Number of Scripts: {scriptPrefs.numScripts}
+                    </label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      value={scriptPrefs.numScripts}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, numScripts: parseInt(e.target.value)})}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>1</span>
+                      <span>5</span>
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Platform
-                </label>
-                <select
-                  value={scriptPrefs.platform}
-                  onChange={(e) => setScriptPrefs({...scriptPrefs, platform: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
-                >
-                  <option value="tiktok">TikTok</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="facebook">Facebook</option>
-                </select>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={scriptPrefs.includeBroll}
-                  onChange={(e) => setScriptPrefs({...scriptPrefs, includeBroll: e.target.checked})}
-                  className="w-4 h-4 text-purple-600 rounded"
-                />
-                <label className="ml-2 text-sm font-semibold text-gray-700 flex items-center gap-1">
-                  <Camera className="w-4 h-4" />
-                  Include B-roll Suggestions & Pexels Videos
-                </label>
-              </div>
-
-              <button
-                onClick={generateScripts}
-                disabled={isGenerating || !businessInfo.brandName || !businessInfo.niche}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Generating Scripts & Fetching B-roll...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Generate Scripts
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {scripts.length > 0 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">Generated Scripts</h2>
-            <div className="space-y-4">
-              {scripts.map((script, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-purple-600">{script.title}</h3>
-                    <button
-                      onClick={() => copyToClipboard(formatScript(script), index)}
-                      className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition"
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Video Length
+                    </label>
+                    <select
+                      value={scriptPrefs.length}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, length: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
                     >
-                      {copiedIndex === index ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Copied!
-                        </>
+                      <option value="10s">10 seconds</option>
+                      <option value="15s">15 seconds</option>
+                      <option value="30s">30 seconds</option>
+                      <option value="45s">45 seconds</option>
+                      <option value="1min">1 minute</option>
+                      <option value="1min15s">1 minute 15 seconds</option>
+                      <option value="1min30s">1 minute 30 seconds</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Platform
+                    </label>
+                    <select
+                      value={scriptPrefs.platform}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, platform: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="tiktok">TikTok</option>
+                      <option value="instagram">Instagram</option>
+                      <option value="youtube">YouTube</option>
+                      <option value="facebook">Facebook</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={scriptPrefs.includeBroll}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, includeBroll: e.target.checked})}
+                      className="w-4 h-4 text-purple-600 rounded"
+                    />
+                    <label className="ml-2 text-sm font-semibold text-gray-700 flex items-center gap-1">
+                      <Camera className="w-4 h-4" />
+                      Include B-roll Suggestions & Pexels Videos
+                    </label>
+                  </div>
+
+                  <button
+                    onClick={generateScripts}
+                    disabled={isGenerating || !businessInfo.brandName || !businessInfo.niche}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Generate Scripts
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {scripts.length > 0 && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">Generated Scripts</h2>
+                <div className="space-y-4">
+                  {scripts.map((script, index) => (
+                    <div key={index} className="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
+                      {editingScript === script ? (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-xl font-bold text-purple-600">Editing: {script.title}</h3>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={saveEditedScript}
+                                className="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition flex items-center gap-1"
+                              >
+                                <Check className="w-4 h-4" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingScript(null)}
+                                className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Hook</label>
+                            <input
+                              value={editingScript.hook}
+                              onChange={(e) => updateEditingScript('hook', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Script</label>
+                            <textarea
+                              value={editingScript.mainScript}
+                              onChange={(e) => updateEditingScript('mainScript', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                              rows="6"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Caption</label>
+                            <textarea
+                              value={editingScript.caption}
+                              onChange={(e) => updateEditingScript('caption', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                              rows="2"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">CTA</label>
+                            <input
+                              value={editingScript.cta}
+                              onChange={(e) => updateEditingScript('cta', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                            />
+                          </div>
+                        </div>
                       ) : (
                         <>
-                          <Copy className="w-4 h-4" />
-                          Copy
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="text-xl font-bold text-purple-600">{script.title}</h3>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => saveScript(script)}
+                                className="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200 transition flex items-center gap-1"
+                              >
+                                <Star className="w-4 h-4" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingScript(script)}
+                                className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition flex items-center gap-1"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setTeleprompterScript(script);
+                                  setCurrentView('teleprompter');
+                                }}
+                                className="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition flex items-center gap-1"
+                              >
+                                <Monitor className="w-4 h-4" />
+                                Teleprompter
+                              </button>
+                              <button
+                                onClick={() => copyToClipboard(formatScript(script), index)}
+                                className="px-3 py-1 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition flex items-center gap-1"
+                              >
+                                {copiedIndex === index ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                Copy
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">Hook</div>
+                              <p className="text-gray-800 font-medium">{script.hook}</p>
+                            </div>
+                            
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">Script</div>
+                              <p className="text-gray-700 whitespace-pre-line">{script.mainScript}</p>
+                            </div>
+                            
+                            {script.brollSuggestions && script.brollSuggestions.length > 0 && (
+                              <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
+                                  <Camera className="w-3 h-3" />
+                                  B-roll Suggestions
+                                </div>
+                                <ul className="list-disc list-inside text-gray-700">
+                                  {script.brollSuggestions.map((b, i) => (
+                                    <li key={i}>{b}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {script.pexelsVideos && script.pexelsVideos.length > 0 && (
+                              <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                                  <Video className="w-3 h-3" />
+                                  Pexels Video B-roll
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {script.pexelsVideos.map((video, i) => (
+                                    <a
+                                      key={i}
+                                      href={video.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="relative group block rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition"
+                                    >
+                                      <img
+                                        src={video.thumbnail}
+                                        alt={video.description}
+                                        className="w-full h-24 object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition">
+                                        <Video className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition" />
+                                      </div>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">Caption</div>
+                              <p className="text-gray-700">{script.caption}</p>
+                            </div>
+
+                            {script.hashtags && (
+                              <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
+                                  <Hash className="w-3 h-3" />
+                                  Hashtags
+                                  <button
+                                    onClick={() => copyToClipboard(script.hashtags.join(' '), `hashtags-${index}`)}
+                                    className="ml-2 text-purple-600 hover:text-purple-700"
+                                  >
+                                    {copiedIndex === `hashtags-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                                <p className="text-sm text-purple-600">{script.hashtags.join(' ')}</p>
+                              </div>
+                            )}
+                            
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">CTA</div>
+                              <p className="text-gray-800 font-semibold">{script.cta}</p>
+                            </div>
+                          </div>
                         </>
                       )}
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">Hook</div>
-                      <p className="text-gray-800 font-medium">{script.hook}</p>
                     </div>
-                    
-                    <div>
-                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">Script</div>
-                      <p className="text-gray-700 whitespace-pre-line">{script.mainScript}</p>
-                    </div>
-                    
-                    {script.brollSuggestions && script.brollSuggestions.length > 0 && (
-                      <div>
-                        <div className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
-                          <Camera className="w-3 h-3" />
-                          B-roll Suggestions
-                        </div>
-                        <ul className="list-disc list-inside text-gray-700">
-                          {script.brollSuggestions.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {script.pexelsVideos && script.pexelsVideos.length > 0 && (
-                      <div>
-                        <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
-                          <Video className="w-3 h-3" />
-                          Pexels Video B-roll
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {script.pexelsVideos.map((video, i) => (
-                            <a
-                              key={i}
-                              href={video.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="relative group block rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition"
-                            >
-                              <img
-                                src={video.thumbnail}
-                                alt={video.description}
-                                className="w-full h-24 object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition">
-                                <Video className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition" />
-                              </div>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">Caption</div>
-                      <p className="text-gray-700">{script.caption}</p>
-                    </div>
-                    
-                    <div>
-                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">CTA</div>
-                      <p className="text-gray-800 font-semibold">{script.cta}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
