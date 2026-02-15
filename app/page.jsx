@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Camera, Sparkles, Lock, Copy, Check } from 'lucide-react';
+import { Camera, Sparkles, Lock, Copy, Check, RefreshCw, Video } from 'lucide-react';
 
 export default function MarketingScriptGenerator() {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -32,6 +32,24 @@ export default function MarketingScriptGenerator() {
     }
   };
 
+  const handleReset = () => {
+    setBusinessInfo({
+      brandName: '',
+      niche: '',
+      targetAudience: '',
+      offerings: '',
+      uniqueValue: '',
+      additionalInfo: ''
+    });
+    setScripts([]);
+    setScriptPrefs({
+      numScripts: 3,
+      length: '30s',
+      platform: 'instagram',
+      includeBroll: true
+    });
+  };
+
   const scriptTemplates = {
     problemSolution: {
       title: "Problem → Solution Format",
@@ -48,7 +66,8 @@ export default function MarketingScriptGenerator() {
         };
         return scripts[length] || scripts['30s'];
       },
-      getCTA: (info) => `Ready to transform your ${info.niche.toLowerCase()}? Check the link in bio!`
+      getCTA: (info) => `Ready to transform your ${info.niche.toLowerCase()}? Check the link in bio!`,
+      getBrollKeywords: (info) => [`${info.niche} problem`, `frustrated ${info.targetAudience}`, `${info.niche} solution`, `happy customer success`]
     },
     
     valueProposition: {
@@ -66,7 +85,8 @@ export default function MarketingScriptGenerator() {
         };
         return scripts[length] || scripts['30s'];
       },
-      getCTA: (info) => `Experience the ${info.brandName} difference. Link in bio.`
+      getCTA: (info) => `Experience the ${info.brandName} difference. Link in bio.`,
+      getBrollKeywords: (info) => [`${info.niche} product`, `${info.brandName} features`, `quality ${info.niche}`, `premium product`]
     },
 
     socialProof: {
@@ -84,7 +104,8 @@ export default function MarketingScriptGenerator() {
         };
         return scripts[length] || scripts['30s'];
       },
-      getCTA: (info) => `Join our community. See results yourself. Link in bio.`
+      getCTA: (info) => `Join our community. See results yourself. Link in bio.`,
+      getBrollKeywords: (info) => [`happy customers`, `testimonial ${info.niche}`, `community celebration`, `success stories`]
     },
 
     behindTheScenes: {
@@ -102,7 +123,8 @@ export default function MarketingScriptGenerator() {
         };
         return scripts[length] || scripts['30s'];
       },
-      getCTA: (info) => `Be part of our story. Learn more in bio.`
+      getCTA: (info) => `Be part of our story. Learn more in bio.`,
+      getBrollKeywords: (info) => [`office workspace`, `team meeting`, `product development`, `behind the scenes work`]
     },
 
     howItWorks: {
@@ -120,7 +142,35 @@ export default function MarketingScriptGenerator() {
         };
         return scripts[length] || scripts['30s'];
       },
-      getCTA: (info) => `Try ${info.brandName} today. Link in bio.`
+      getCTA: (info) => `Try ${info.brandName} today. Link in bio.`,
+      getBrollKeywords: (info) => [`tutorial screen recording`, `step by step process`, `easy setup`, `user dashboard`]
+    }
+  };
+
+  const fetchPexelsVideos = async (keywords) => {
+    try {
+      const responses = await Promise.all(
+        keywords.map(keyword => 
+          fetch(`/api/pexels?query=${encodeURIComponent(keyword)}`)
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null)
+        )
+      );
+
+      const videos = responses
+        .filter(data => data && data.videos && data.videos.length > 0)
+        .flatMap(data => data.videos.slice(0, 2))
+        .slice(0, 4)
+        .map(video => ({
+          description: video.url ? `Video: ${video.url.split('/')[4] || 'Pexels video'}` : 'Pexels video',
+          url: video.video_files?.[0]?.link || video.url,
+          thumbnail: video.image
+        }));
+
+      return videos.length > 0 ? videos : null;
+    } catch (error) {
+      console.error('Pexels fetch error:', error);
+      return null;
     }
   };
 
@@ -176,21 +226,29 @@ export default function MarketingScriptGenerator() {
         selectedTemplates.push({ key: randomKey, template: scriptTemplates[randomKey] });
       }
 
-      const generatedScripts = selectedTemplates.map((item, index) => {
+      const generatedScripts = await Promise.all(selectedTemplates.map(async (item, index) => {
         const template = item.template;
-        const brollSuggestions = scriptPrefs.includeBroll 
-          ? generateBrollSuggestions(businessInfo, item.key)
-          : [];
+        
+        let brollSuggestions = [];
+        let pexelsVideos = null;
+
+        if (scriptPrefs.includeBroll) {
+          brollSuggestions = generateBrollSuggestions(businessInfo, item.key);
+          
+          const keywords = template.getBrollKeywords(businessInfo);
+          pexelsVideos = await fetchPexelsVideos(keywords);
+        }
 
         return {
           title: template.title,
           hook: template.getHook(businessInfo),
           mainScript: template.getScript(businessInfo, scriptPrefs.length),
           brollSuggestions: brollSuggestions,
+          pexelsVideos: pexelsVideos,
           caption: `${businessInfo.brandName} - ${businessInfo.uniqueValue} 🚀 Perfect for ${businessInfo.targetAudience} in ${businessInfo.niche}. #${businessInfo.niche.replace(/\s/g, '')} #${scriptPrefs.platform} #contentcreator`,
           cta: template.getCTA(businessInfo)
         };
-      });
+      }));
 
       setScripts(generatedScripts);
       
@@ -209,7 +267,7 @@ export default function MarketingScriptGenerator() {
   };
 
   const formatScript = (script) => {
-    return `🎬 ${script.title}
+    let formatted = `🎬 ${script.title}
 
 🪝 HOOK:
 ${script.hook}
@@ -217,14 +275,29 @@ ${script.hook}
 📝 SCRIPT:
 ${script.mainScript}
 
-${script.brollSuggestions?.length > 0 ? `🎥 B-ROLL SUGGESTIONS:
+`;
+
+    if (script.brollSuggestions?.length > 0) {
+      formatted += `🎥 B-ROLL SUGGESTIONS:
 ${script.brollSuggestions.map((b, i) => `${i + 1}. ${b}`).join('\n')}
 
-` : ''}📱 CAPTION:
+`;
+    }
+
+    if (script.pexelsVideos?.length > 0) {
+      formatted += `🎬 PEXELS VIDEO B-ROLL:
+${script.pexelsVideos.map((v, i) => `${i + 1}. ${v.url}`).join('\n')}
+
+`;
+    }
+
+    formatted += `📱 CAPTION:
 ${script.caption}
 
 🎯 CTA:
 ${script.cta}`;
+
+    return formatted;
   };
 
   if (!isUnlocked) {
@@ -269,12 +342,21 @@ ${script.cta}`;
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-6 px-4 shadow-lg">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Sparkles className="w-8 h-8" />
-            Marketing Script Generator
-          </h1>
-          <p className="text-purple-100 mt-1">AI-powered scripts for your brand</p>
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Sparkles className="w-8 h-8" />
+              Marketing Script Generator
+            </h1>
+            <p className="text-purple-100 mt-1">AI-powered scripts for your brand</p>
+          </div>
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Reset All
+          </button>
         </div>
       </div>
 
@@ -423,7 +505,7 @@ ${script.cta}`;
                 />
                 <label className="ml-2 text-sm font-semibold text-gray-700 flex items-center gap-1">
                   <Camera className="w-4 h-4" />
-                  Include B-roll Suggestions
+                  Include B-roll Suggestions & Pexels Videos
                 </label>
               </div>
 
@@ -435,7 +517,7 @@ ${script.cta}`;
                 {isGenerating ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Generating...
+                    Generating Scripts & Fetching B-roll...
                   </>
                 ) : (
                   <>
@@ -496,6 +578,35 @@ ${script.cta}`;
                             <li key={i}>{b}</li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+
+                    {script.pexelsVideos && script.pexelsVideos.length > 0 && (
+                      <div>
+                        <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                          <Video className="w-3 h-3" />
+                          Pexels Video B-roll
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {script.pexelsVideos.map((video, i) => (
+                            <a
+                              key={i}
+                              href={video.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative group block rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition"
+                            >
+                              <img
+                                src={video.thumbnail}
+                                alt={video.description}
+                                className="w-full h-24 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition">
+                                <Video className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition" />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     )}
                     
