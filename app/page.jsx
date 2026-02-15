@@ -35,6 +35,7 @@ export default function MarketingScriptGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [editingScript, setEditingScript] = useState(null);
+  const [showEnhancedPreview, setShowEnhancedPreview] = useState(false);
   
   // Teleprompter
   const [teleprompterScript, setTeleprompterScript] = useState(null);
@@ -336,6 +337,68 @@ export default function MarketingScriptGenerator() {
     return suggestions[scriptType] || suggestions.valueProposition;
   };
 
+  const enhanceBusinessInfo = (info) => {
+    // Enhance brand name with power words
+    const brandEnhanced = info.brandName;
+    
+    // Enhance niche with professional terminology
+    const nicheMap = {
+      'fitness': 'health and fitness transformation',
+      'tech': 'cutting-edge technology solutions',
+      'beauty': 'premium beauty and skincare',
+      'food': 'culinary excellence and gourmet experiences',
+      'business': 'entrepreneurial success and business growth',
+      'fashion': 'style innovation and fashion-forward design',
+      'marketing': 'digital marketing mastery and brand growth',
+      'coaching': 'transformational coaching and personal development',
+      'education': 'educational excellence and skill development',
+      'real estate': 'property investment and real estate success',
+      'finance': 'financial freedom and wealth building',
+      'travel': 'luxury travel and unforgettable experiences',
+      'photography': 'professional photography and visual storytelling',
+      'music': 'musical excellence and creative artistry',
+      'art': 'creative expression and artistic innovation'
+    };
+    
+    let nicheEnhanced = info.niche;
+    for (const [key, value] of Object.entries(nicheMap)) {
+      if (info.niche.toLowerCase().includes(key)) {
+        nicheEnhanced = value;
+        break;
+      }
+    }
+    
+    // Enhance target audience with specificity
+    const audienceEnhanced = info.targetAudience.toLowerCase().includes('entrepreneur') 
+      ? 'ambitious entrepreneurs and business visionaries'
+      : info.targetAudience.toLowerCase().includes('professional')
+      ? 'forward-thinking professionals and industry leaders'
+      : info.targetAudience.toLowerCase().includes('creator')
+      ? 'passionate content creators and influencers'
+      : info.targetAudience.toLowerCase().includes('women') || info.targetAudience.toLowerCase().includes('men')
+      ? `driven ${info.targetAudience} seeking excellence`
+      : `motivated ${info.targetAudience}`;
+    
+    // Enhance offerings with benefit-focused language
+    const offeringsEnhanced = info.offerings.length > 100 
+      ? info.offerings 
+      : `premium ${info.offerings} designed to deliver measurable results`;
+    
+    // Enhance unique value with power language
+    const uniqueValueEnhanced = info.uniqueValue.length > 80
+      ? info.uniqueValue
+      : `${info.uniqueValue}, backed by proven strategies and real-world success`;
+    
+    return {
+      brandName: brandEnhanced,
+      niche: nicheEnhanced,
+      targetAudience: audienceEnhanced,
+      offerings: offeringsEnhanced,
+      uniqueValue: uniqueValueEnhanced,
+      additionalInfo: info.additionalInfo
+    };
+  };
+
   const generateScripts = async () => {
     setIsGenerating(true);
     setScripts([]);
@@ -343,6 +406,9 @@ export default function MarketingScriptGenerator() {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
+      // Enhance the business info before generating scripts
+      const enhancedInfo = enhanceBusinessInfo(businessInfo);
+      
       const templateKeys = Object.keys(scriptTemplates);
       const selectedTemplates = [];
       
@@ -358,9 +424,9 @@ export default function MarketingScriptGenerator() {
         let pexelsVideos = null;
 
         if (scriptPrefs.includeBroll) {
-          brollSuggestions = generateBrollSuggestions(businessInfo, item.key);
+          brollSuggestions = generateBrollSuggestions(enhancedInfo, item.key);
           
-          const keywords = template.getBrollKeywords(businessInfo);
+          const keywords = template.getBrollKeywords(enhancedInfo);
           pexelsVideos = await fetchPexelsVideos(keywords);
         }
 
@@ -368,13 +434,13 @@ export default function MarketingScriptGenerator() {
 
         return {
           title: template.title,
-          hook: template.getHook(businessInfo),
-          mainScript: template.getScript(businessInfo, scriptPrefs.length),
+          hook: template.getHook(enhancedInfo),
+          mainScript: template.getScript(enhancedInfo, scriptPrefs.length),
           brollSuggestions: brollSuggestions,
           pexelsVideos: pexelsVideos,
-          caption: `${businessInfo.brandName} - ${businessInfo.uniqueValue} 🚀 Perfect for ${businessInfo.targetAudience} in ${businessInfo.niche}.`,
+          caption: `${enhancedInfo.brandName} - ${enhancedInfo.uniqueValue} 🚀 Perfect for ${enhancedInfo.targetAudience} in ${enhancedInfo.niche}.`,
           hashtags: hashtags,
-          cta: template.getCTA(businessInfo)
+          cta: template.getCTA(enhancedInfo)
         };
       }));
 
@@ -863,6 +929,51 @@ ${script.cta}`;
                       </>
                     )}
                   </button>
+
+                  {businessInfo.brandName && businessInfo.niche && (
+                    <button
+                      onClick={() => setShowEnhancedPreview(!showEnhancedPreview)}
+                      className="w-full mt-2 px-4 py-2 border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      {showEnhancedPreview ? 'Hide' : 'Preview'} Enhanced Version
+                    </button>
+                  )}
+
+                  {showEnhancedPreview && businessInfo.brandName && businessInfo.niche && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                      <h3 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        ✨ SEO-Enhanced Preview
+                      </h3>
+                      {(() => {
+                        const enhanced = enhanceBusinessInfo(businessInfo);
+                        return (
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="font-semibold text-gray-600">Niche:</span>
+                              <p className="text-purple-700 italic">{enhanced.niche}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-600">Audience:</span>
+                              <p className="text-purple-700 italic">{enhanced.targetAudience}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-600">Offerings:</span>
+                              <p className="text-purple-700 italic">{enhanced.offerings}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-600">Value:</span>
+                              <p className="text-purple-700 italic">{enhanced.uniqueValue}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      <p className="text-xs text-purple-600 mt-3">
+                        ℹ️ This is how your info will appear in scripts - professional & SEO-optimized!
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
