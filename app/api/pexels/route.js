@@ -19,6 +19,7 @@ export async function GET(request) {
     );
 
     if (!response.ok) {
+      console.error('Pexels API error:', response.status);
       return NextResponse.json(
         { error: 'Pexels API error' },
         { status: response.status }
