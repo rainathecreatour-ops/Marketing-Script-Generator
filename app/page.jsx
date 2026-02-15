@@ -312,3 +312,209 @@ ${script.cta}`;
                   Target Audience *
                 </label>
                 <input
+                  type="text"
+                  value={businessInfo.targetAudience}
+                  onChange={(e) => setBusinessInfo({...businessInfo, targetAudience: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                  placeholder="Who are you targeting?"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  What You Offer *
+                </label>
+                <textarea
+                  value={businessInfo.offerings}
+                  onChange={(e) => setBusinessInfo({...businessInfo, offerings: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                  placeholder="Products, services, solutions..."
+                  rows="3"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Unique Value Proposition *
+                </label>
+                <textarea
+                  value={businessInfo.uniqueValue}
+                  onChange={(e) => setBusinessInfo({...businessInfo, uniqueValue: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                  placeholder="What makes you different?"
+                  rows="2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Additional Info
+                </label>
+                <textarea
+                  value={businessInfo.additionalInfo}
+                  onChange={(e) => setBusinessInfo({...businessInfo, additionalInfo: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                  placeholder="Anything else we should know?"
+                  rows="2"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Script Preferences</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Number of Scripts: {scriptPrefs.numScripts}
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={scriptPrefs.numScripts}
+                  onChange={(e) => setScriptPrefs({...scriptPrefs, numScripts: parseInt(e.target.value)})}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>1</span>
+                  <span>5</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Video Length
+                </label>
+                <select
+                  value={scriptPrefs.length}
+                  onChange={(e) => setScriptPrefs({...scriptPrefs, length: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                >
+                  <option value="10s">10 seconds</option>
+                  <option value="15s">15 seconds</option>
+                  <option value="30s">30 seconds</option>
+                  <option value="45s">45 seconds</option>
+                  <option value="1min">1 minute</option>
+                  <option value="1min15s">1 minute 15 seconds</option>
+                  <option value="1min30s">1 minute 30 seconds</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Platform
+                </label>
+                <select
+                  value={scriptPrefs.platform}
+                  onChange={(e) => setScriptPrefs({...scriptPrefs, platform: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                >
+                  <option value="tiktok">TikTok</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="facebook">Facebook</option>
+                </select>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={scriptPrefs.includeBroll}
+                  onChange={(e) => setScriptPrefs({...scriptPrefs, includeBroll: e.target.checked})}
+                  className="w-4 h-4 text-purple-600 rounded"
+                />
+                <label className="ml-2 text-sm font-semibold text-gray-700 flex items-center gap-1">
+                  <Camera className="w-4 h-4" />
+                  Include B-roll Suggestions
+                </label>
+              </div>
+
+              <button
+                onClick={generateScripts}
+                disabled={isGenerating || !businessInfo.brandName || !businessInfo.niche}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Generate Scripts
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {scripts.length > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Generated Scripts</h2>
+            <div className="space-y-4">
+              {scripts.map((script, index) => (
+                <div key={index} className="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-xl font-bold text-purple-600">{script.title}</h3>
+                    <button
+                      onClick={() => copyToClipboard(formatScript(script), index)}
+                      className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition"
+                    >
+                      {copiedIndex === index ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">Hook</div>
+                      <p className="text-gray-800 font-medium">{script.hook}</p>
+                    </div>
+                    
+                    <div>
+                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">Script</div>
+                      <p className="text-gray-700 whitespace-pre-line">{script.mainScript}</p>
+                    </div>
+                    
+                    {script.brollSuggestions && script.brollSuggestions.length > 0 && (
+                      <div>
+                        <div className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
+                          <Camera className="w-3 h-3" />
+                          B-roll Suggestions
+                        </div>
+                        <ul className="list-disc list-inside text-gray-700">
+                          {script.brollSuggestions.map((b, i) => (
+                            <li key={i}>{b}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">Caption</div>
+                      <p className="text-gray-700">{script.caption}</p>
+                    </div>
+                    
+                    <div>
+                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">CTA</div>
+                      <p className="text-gray-800 font-semibold">{script.cta}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
