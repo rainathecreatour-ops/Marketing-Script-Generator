@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Camera, Sparkles, Lock, Copy, Check, RefreshCw, Video, Save, Edit2, User, Hash, Monitor, ChevronDown, Star, Play, Pause, X, Plus, Trash2 } from 'lucide-react';
+import { Camera, Sparkles, Lock, Copy, Check, RefreshCw, Video, Save, Edit2, User, Hash, Monitor, ChevronDown, Star, Play, Pause, X, Plus, Trash2, Image, Music } from 'lucide-react';
 
 export default function MarketingScriptGenerator() {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -37,6 +37,7 @@ export default function MarketingScriptGenerator() {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [editingScript, setEditingScript] = useState(null);
   const [showEnhancedPreview, setShowEnhancedPreview] = useState(false);
+  const [generationHistory, setGenerationHistory] = useState([]);
   
   // Teleprompter
   const [teleprompterScript, setTeleprompterScript] = useState(null);
@@ -180,30 +181,98 @@ export default function MarketingScriptGenerator() {
   const scriptTemplates = {
     problemSolution: {
       title: "Problem → Solution Format",
-      getHook: (info, tone) => {
-        const hooks = {
-          playful: `Let's be real - ${info.niche.toLowerCase()} can get boring AF. Sound familiar?`,
-          direct: `Here's the truth about ${info.niche.toLowerCase()} that nobody talks about.`,
-          funny: `Okay, confession time: your ${info.niche.toLowerCase()} life needs help. Don't @ me.`,
-          motivational: `What if I told you that struggling with ${info.niche.toLowerCase()} doesn't have to be your reality?`,
-          calm: `If you've been feeling stuck with ${info.niche.toLowerCase()}, you're not alone.`,
-          engaging: `Struggling with ${info.niche.toLowerCase()}? You're not alone.`,
-          bold: `Stop settling for mediocre ${info.niche.toLowerCase()}. Period.`,
-          romantic: `Remember when ${info.niche.toLowerCase()} used to excite you? Let's bring that back.`
+      getHook: (info, tone, variation = 0) => {
+        const hookVariations = {
+          playful: [
+            `Let's be real - ${info.niche.toLowerCase()} can get boring AF. Sound familiar?`,
+            `Okay so... ${info.niche.toLowerCase()} isn't exactly thrilling right now, is it?`,
+            `Hot take: your ${info.niche.toLowerCase()} life could use a serious upgrade.`,
+            `Can we talk about how ${info.niche.toLowerCase()} has gotten so predictable?`,
+            `Nobody wants to admit it, but ${info.niche.toLowerCase()} has become kind of... meh.`
+          ],
+          direct: [
+            `Here's the truth about ${info.niche.toLowerCase()} that nobody talks about.`,
+            `Let me be straight with you about ${info.niche.toLowerCase()}.`,
+            `The reality of ${info.niche.toLowerCase()}? It's not what you think.`,
+            `I'm going to say what everyone's thinking about ${info.niche.toLowerCase()}.`,
+            `There's a problem with ${info.niche.toLowerCase()} - and it's time we address it.`
+          ],
+          funny: [
+            `Okay, confession time: your ${info.niche.toLowerCase()} life needs help. Don't @ me.`,
+            `Raise your hand if your ${info.niche.toLowerCase()} game is... questionable. 🙋`,
+            `We need to talk about the elephant in the room: ${info.niche.toLowerCase()}.`,
+            `Plot twist: ${info.niche.toLowerCase()} doesn't have to be this painful.`,
+            `If ${info.niche.toLowerCase()} was a report card, what grade would you get? Yeah, that's what I thought.`
+          ],
+          motivational: [
+            `What if I told you that struggling with ${info.niche.toLowerCase()} doesn't have to be your reality?`,
+            `Imagine if ${info.niche.toLowerCase()} could actually be enjoyable. It's possible.`,
+            `You deserve better than what ${info.niche.toLowerCase()} has been giving you.`,
+            `There's a version of you who's thriving in ${info.niche.toLowerCase()}. Let's get you there.`,
+            `${info.niche.toLowerCase()} transformation starts with one decision. This could be it.`
+          ],
+          calm: [
+            `If you've been feeling stuck with ${info.niche.toLowerCase()}, you're not alone.`,
+            `It's okay to admit that ${info.niche.toLowerCase()} hasn't been working for you.`,
+            `Many people struggle with ${info.niche.toLowerCase()}. Here's what actually helps.`,
+            `Feeling overwhelmed by ${info.niche.toLowerCase()}? There's a simpler way.`,
+            `You don't have to force ${info.niche.toLowerCase()} to work. Let me show you.`
+          ],
+          engaging: [
+            `Struggling with ${info.niche.toLowerCase()}? You're not alone.`,
+            `Most people get ${info.niche.toLowerCase()} wrong. Here's why.`,
+            `There's a better way to approach ${info.niche.toLowerCase()}.`,
+            `If ${info.niche.toLowerCase()} feels hard, you're doing it wrong.`,
+            `What if ${info.niche.toLowerCase()} could be easier than you think?`
+          ],
+          bold: [
+            `Stop settling for mediocre ${info.niche.toLowerCase()}. Period.`,
+            `You're better than this ${info.niche.toLowerCase()} situation.`,
+            `Enough excuses. Your ${info.niche.toLowerCase()} needs to change now.`,
+            `Mediocre ${info.niche.toLowerCase()}? Not on my watch.`,
+            `Time to stop accepting less in your ${info.niche.toLowerCase()}.`
+          ],
+          romantic: [
+            `Remember when ${info.niche.toLowerCase()} used to excite you? Let's bring that back.`,
+            `There was a time when ${info.niche.toLowerCase()} made your heart race. You can have that again.`,
+            `What if ${info.niche.toLowerCase()} could feel magical again?`,
+            `The spark in your ${info.niche.toLowerCase()} isn't gone. It's just waiting.`,
+            `Imagine ${info.niche.toLowerCase()} that makes you feel alive again.`
+          ]
         };
         
-        // Special hooks for specific niches
+        // Special hooks for couples/relationship products
         if (info.niche.toLowerCase().includes('relationship') || info.niche.toLowerCase().includes('couples')) {
-          return tone === 'playful' 
-            ? "When's the last time you laughed until you cried with your partner? Can't remember? Yeah, we need to fix that."
-            : tone === 'romantic'
-            ? "Remember when you couldn't keep your hands off each other? When every conversation felt electric? Let's get that back."
-            : tone === 'funny'
-            ? "If your date nights consist of Netflix and arguing about what to watch... we need to talk."
-            : "Most couples are stuck in the same routine. Dinner, TV, sleep. Repeat. Sound familiar?";
+          const relationshipHooks = {
+            playful: [
+              "When's the last time you laughed until you cried with your partner? Can't remember? Yeah, we need to fix that.",
+              "Quick question: is your relationship exciting or... comfortable? There's a difference.",
+              "Date night idea: Actually having fun together. Wild concept, I know.",
+              "Okay but when did date night become so boring? Let's change that.",
+              "Your relationship isn't broken. It's just stuck in autopilot mode."
+            ],
+            romantic: [
+              "Remember when you couldn't keep your hands off each other? When every conversation felt electric? Let's get that back.",
+              "There was a moment when you knew they were the one. You can feel that intensity again.",
+              "The butterflies aren't gone. They're just sleeping. Time to wake them up.",
+              "Remember your first kiss? That electricity can come back.",
+              "What if every night together felt like falling in love again?"
+            ],
+            funny: [
+              "If your date nights consist of Netflix and arguing about what to watch... we need to talk.",
+              "Be honest: when's the last time you did something NEW together? 2019 doesn't count.",
+              "Your idea of spicing things up: trying a different Netflix category. We can do better.",
+              "Date night checklist: Same restaurant ✓ Same conversation ✓ Same routine ✓ See the problem?",
+              "Plot twist: relationships require effort. But like, the fun kind of effort."
+            ]
+          };
+          
+          const hooks = relationshipHooks[tone] || hookVariations[tone];
+          return hooks ? hooks[variation % hooks.length] : hookVariations.engaging[0];
         }
         
-        return hooks[tone] || hooks.engaging;
+        const hooks = hookVariations[tone] || hookVariations.engaging;
+        return hooks[variation % hooks.length];
       },
       getScript: (info, length, tone) => {
         // Special scripts for couples/relationship products
@@ -553,6 +622,113 @@ export default function MarketingScriptGenerator() {
     };
   };
 
+  // Generate unique logo/visual prompt
+  const generateLogoPrompt = (info) => {
+    const styles = [
+      'minimalist modern logo',
+      'bold geometric design',
+      'elegant typography-based logo',
+      'abstract symbol with negative space',
+      'vibrant gradient logo',
+      'professional corporate identity',
+      'playful illustrative logo',
+      'luxury premium branding',
+      'tech-inspired futuristic design',
+      'hand-drawn artistic logo'
+    ];
+    
+    const moods = [
+      'sophisticated and trustworthy',
+      'energetic and dynamic',
+      'calm and serene',
+      'bold and confident',
+      'warm and inviting',
+      'sleek and modern',
+      'fun and approachable',
+      'powerful and authoritative',
+      'creative and unique',
+      'elegant and refined'
+    ];
+    
+    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+    const randomMood = moods[Math.floor(Math.random() * moods.length)];
+    
+    return `${randomStyle} for ${info.brandName}, a ${info.niche} brand. ${randomMood} aesthetic. Professional, scalable vector design. Color scheme should reflect ${info.niche} industry. Clean, memorable, and versatile for digital and print use.`;
+  };
+
+  // Generate Suno-style music prompt
+  const generateMusicPrompt = (info, scriptType, tone) => {
+    const musicStyles = {
+      problemSolution: {
+        playful: 'upbeat indie pop with bouncy synths, playful guitar riffs, 120 BPM, fun and lighthearted',
+        funny: 'quirky comedy music with pizzicato strings, xylophone accents, comedic timing, 125 BPM',
+        romantic: 'soft acoustic ballad with gentle piano, warm strings, intimate vocals, 80 BPM',
+        direct: 'confident electronic beat with driving bass, clear melody, assertive energy, 115 BPM',
+        motivational: 'inspiring cinematic music with building strings, epic drums, triumphant horns, 100 BPM',
+        calm: 'ambient meditation music with soft pads, gentle chimes, peaceful atmosphere, 70 BPM',
+        bold: 'powerful rock anthem with electric guitars, strong drums, confident energy, 130 BPM',
+        engaging: 'modern pop production with catchy hooks, smooth bassline, energetic feel, 110 BPM'
+      },
+      valueProposition: {
+        playful: 'bright commercial pop with ukulele, hand claps, cheerful whistling, 118 BPM',
+        funny: 'goofy novelty music with tuba, kazoo sounds, silly percussion, 122 BPM',
+        romantic: 'sultry R&B with smooth saxophone, jazzy chords, sensual groove, 90 BPM',
+        direct: 'corporate motivational music with piano, strings, professional polish, 105 BPM',
+        motivational: 'uplifting orchestral piece with soaring melodies, powerful crescendos, 95 BPM',
+        calm: 'spa music with nature sounds, soft harp, flowing water ambiance, 65 BPM',
+        bold: 'aggressive hip-hop beat with heavy bass, sharp hi-hats, commanding presence, 140 BPM',
+        engaging: 'trendy electronic pop with synth leads, punchy drums, radio-ready sound, 120 BPM'
+      },
+      socialProof: {
+        playful: 'celebratory party music with horns, confetti sounds, festive energy, 128 BPM',
+        funny: 'cartoon comedy music with slide whistle, boing sounds, whimsical feel, 135 BPM',
+        romantic: 'emotional love song with acoustic guitar, strings, heartfelt vocals, 75 BPM',
+        direct: 'news broadcast style music with authoritative brass, steady rhythm, 100 BPM',
+        motivational: 'victory anthem with choir, drums, triumphant melody, epic scale, 110 BPM',
+        calm: 'gentle acoustic with soft vocals, warm instrumentation, comforting vibe, 80 BPM',
+        bold: 'stadium rock with crowd cheers, power chords, anthemic chorus, 135 BPM',
+        engaging: 'social media viral sound with catchy hook, dance beat, shareable energy, 125 BPM'
+      },
+      behindTheScenes: {
+        playful: 'behind-the-scenes vlog music with ukulele, light percussion, casual vibe, 115 BPM',
+        funny: 'mockumentary style music with quirky woodwinds, offbeat timing, 105 BPM',
+        romantic: 'intimate storytelling music with piano, strings, emotional depth, 70 BPM',
+        direct: 'documentary score with subtle electronics, professional tone, 95 BPM',
+        motivational: 'journey music with building intensity, inspirational crescendo, 100 BPM',
+        calm: 'reflective ambient music with soft pads, contemplative mood, 60 BPM',
+        bold: 'origin story epic with cinematic drums, powerful themes, 120 BPM',
+        engaging: 'modern storytelling music with emotional beats, relatable sound, 108 BPM'
+      },
+      howItWorks: {
+        playful: 'tutorial music with marimba, light synths, educational feel, 110 BPM',
+        funny: 'instructional comedy music with silly accents, playful melody, 118 BPM',
+        romantic: 'gentle guide music with soft piano, warm atmosphere, 85 BPM',
+        direct: 'explainer video music with clear structure, professional sound, 105 BPM',
+        motivational: 'empowering tutorial music with uplifting progression, 100 BPM',
+        calm: 'instructional meditation music with gentle guidance feel, 75 BPM',
+        bold: 'dynamic tutorial music with confident energy, clear sections, 125 BPM',
+        engaging: 'how-to video music with friendly vibe, approachable sound, 112 BPM'
+      }
+    };
+    
+    const basePrompt = musicStyles[scriptType]?.[tone] || musicStyles[scriptType]?.engaging || 'upbeat modern music, 120 BPM';
+    return `${basePrompt}. Perfect for ${info.niche} content targeting ${info.targetAudience}. Commercial quality, royalty-free style.`;
+  };
+
+  // Variation system - ensures different wording each time
+  const getVariation = (variations, usedIndices) => {
+    const availableIndices = variations
+      .map((_, i) => i)
+      .filter(i => !usedIndices.includes(i));
+    
+    if (availableIndices.length === 0) {
+      // All used, reset
+      return Math.floor(Math.random() * variations.length);
+    }
+    
+    return availableIndices[Math.floor(Math.random() * availableIndices.length)];
+  };
+
   const generateScripts = async () => {
     setIsGenerating(true);
     setScripts([]);
@@ -574,6 +750,11 @@ export default function MarketingScriptGenerator() {
       const generatedScripts = await Promise.all(selectedTemplates.map(async (item, index) => {
         const template = item.template;
         
+        // Get variation index to ensure uniqueness
+        const historyKey = `${item.key}-${scriptPrefs.tone}-${scriptPrefs.length}`;
+        const usedVariations = generationHistory.filter(h => h === historyKey).length;
+        const variationIndex = usedVariations;
+        
         let brollSuggestions = [];
         let pexelsVideos = null;
 
@@ -585,20 +766,32 @@ export default function MarketingScriptGenerator() {
         }
 
         const hashtags = generateHashtags(businessInfo, scriptPrefs.platform);
+        const logoPrompt = generateLogoPrompt(enhancedInfo);
+        const musicPrompt = generateMusicPrompt(enhancedInfo, item.key, scriptPrefs.tone);
 
         return {
           title: template.title,
-          hook: template.getHook(enhancedInfo, scriptPrefs.tone),
+          hook: template.getHook(enhancedInfo, scriptPrefs.tone, variationIndex),
           mainScript: template.getScript(enhancedInfo, scriptPrefs.length, scriptPrefs.tone),
           brollSuggestions: brollSuggestions,
           pexelsVideos: pexelsVideos,
           caption: `${enhancedInfo.brandName} - ${enhancedInfo.uniqueValue} 🚀 Perfect for ${enhancedInfo.targetAudience} in ${enhancedInfo.niche}.`,
           hashtags: hashtags,
-          cta: template.getCTA(enhancedInfo)
+          cta: template.getCTA(enhancedInfo),
+          logoPrompt: logoPrompt,
+          musicPrompt: musicPrompt
         };
       }));
 
       setScripts(generatedScripts);
+      
+      // Track generation history for variations
+      const newHistory = [...generationHistory];
+      selectedTemplates.forEach(item => {
+        const historyKey = `${item.key}-${scriptPrefs.tone}-${scriptPrefs.length}`;
+        newHistory.push(historyKey);
+      });
+      setGenerationHistory(newHistory);
       
     } catch (err) {
       console.error("Error generating scripts:", err);
@@ -646,7 +839,13 @@ ${script.caption}
 ${script.hashtags?.join(' ') || ''}
 
 🎯 CTA:
-${script.cta}`;
+${script.cta}
+
+🎨 LOGO/VISUAL PROMPT:
+${script.logoPrompt}
+
+🎵 MUSIC PROMPT (Suno):
+${script.musicPrompt}`;
 
     return formatted;
   };
@@ -1315,6 +1514,48 @@ ${script.cta}`;
                               <div className="text-xs font-bold text-gray-500 uppercase mb-1">CTA</div>
                               <p className="text-gray-800 font-semibold">{script.cta}</p>
                             </div>
+
+                            {script.logoPrompt && (
+                              <div className="border-t pt-3 mt-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                                  <Image className="w-3 h-3" />
+                                  AI Logo/Visual Prompt
+                                  <button
+                                    onClick={() => copyToClipboard(script.logoPrompt, `logo-${index}`)}
+                                    className="ml-2 text-purple-600 hover:text-purple-700"
+                                  >
+                                    {copiedIndex === `logo-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                                <p className="text-xs text-gray-600 bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                  {script.logoPrompt}
+                                </p>
+                                <p className="text-xs text-purple-600 mt-1">
+                                  💡 Use in MidJourney, DALL-E, or Leonardo.ai
+                                </p>
+                              </div>
+                            )}
+
+                            {script.musicPrompt && (
+                              <div className="border-t pt-3 mt-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                                  <Music className="w-3 h-3" />
+                                  Suno Music Prompt
+                                  <button
+                                    onClick={() => copyToClipboard(script.musicPrompt, `music-${index}`)}
+                                    className="ml-2 text-purple-600 hover:text-purple-700"
+                                  >
+                                    {copiedIndex === `music-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                                <p className="text-xs text-gray-600 bg-green-50 p-3 rounded-lg border border-green-100">
+                                  {script.musicPrompt}
+                                </p>
+                                <p className="text-xs text-green-600 mt-1">
+                                  🎵 Use in Suno.ai for perfect background music
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </>
                       )}
