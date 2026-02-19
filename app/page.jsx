@@ -1,4 +1,65 @@
-'use client';
+getScript: (info, length, tone) => {
+        // Helper to format features for scripts
+        const formatFeatures = (features, length) => {
+          if (!features || features.length === 0) return '';
+          
+          if (length === '10s' || length === '15s') {
+            // Very short - just mention number of features
+            return features.length > 0 ? ` With ${features.length} game-changing features included.` : '';
+          }
+          
+          if (length === '30s') {
+            // Short - mention top 2-3 features
+            const topFeatures = features.slice(0, 2);
+            return topFeatures.length > 0 
+              ? ` Inside: ${topFeatures.map(f => f.original).join(', and ')}.`
+              : '';
+          }
+          
+          if (length === '45s' || length === '1min') {
+            // Medium - list 3-4 features with benefits
+            const topFeatures = features.slice(0, 3);
+            return topFeatures.length > 0
+              ? ` What you get: ${topFeatures.map(f => f.marketing).join('. ')}. `
+              : '';
+          }
+          
+          // Long - full feature breakdown
+          const allFeatures = features.slice(0, 5);
+          return allFeatures.length > 0
+            ? ` Here's what's inside: ${allFeatures.map((f, i) => `${i === 0 ? '' : ' '}${f.marketing}`).join('.')}. `
+            : '';
+        };
+        
+        // Special scripts for couples/relationship products
+        if (info.niche.toLowerCase().includes('relationship') || info.niche.toLowerCase().includes('couples') || info.niche.toLowerCase().includes('dating')) {
+          const featuresText = formatFeatures(info.features, length);
+          
+          const relationshipScripts = {
+            '30s': tone === 'playful'
+              ? `Look, we get it. Date nights have become predictable. Same restaurant, same conversations, same... everything. That's why we created ${info.brandName}. It's ${info.offerings} that brings back the fun, the laughter, and yeah - the heat.${featuresText} ${info.uniqueValue}. No boring dinners. Just pure connection.`
+              : tone === 'romantic'
+              ? `Remember your first date? That nervous excitement? The butterflies? ${info.brandName} brings that feeling back. We've created ${info.offerings} designed for ${info.targetAudience} who want to feel that spark again.${featuresText} ${info.uniqueValue}. Rediscover each other.`
+              : tone === 'funny'
+              ? `Date night idea #247: scroll through your phones in silence. Kidding! But seriously, if your relationship has become a routine, ${info.brandName} is here to shake things up. ${info.offerings} that'll have you laughing, connecting, and remembering why you fell in love.${featuresText} ${info.uniqueValue}.`
+              : `Most ${info.targetAudience} fall into the routine trap. ${info.brandName} breaks that cycle. We offer ${info.offerings} specifically designed to reignite connection.${featuresText} ${info.uniqueValue}. Transform ordinary nights into unforgettable moments.`,
+            '45s': tone === 'playful'
+              ? `Honest question: when's the last time you and your partner did something NEW together? Not dinner at the usual spot. Not the same Netflix shows. Something actually exciting? If you can't remember, that's exactly why ${info.brandName} exists. We've created ${info.offerings} packed with experiences that'll make you think, laugh, and connect.${featuresText}${info.uniqueValue}. This isn't your grandma's date night. This is connection on a whole new level. Ready to stop being boring?`
+              : `The routine is killing your relationship. You might not realize it yet, but those same conversations, same patterns, same everything - they're slowly draining the life from what you have. ${info.brandName} is the antidote. ${info.offerings} designed specifically for ${info.targetAudience} ready to break free from the mundane.${featuresText}${info.uniqueValue}. Every moment brings you closer. This is how great relationships stay great.`,
+            '1min': tone === 'playful'
+              ? `Alright, real talk time. Your relationship isn't broken. You're not in trouble. But if we're being honest? You're in a rut. Same dates. Same talks. Same routine. And here's the thing - you both feel it, but nobody's saying anything. That's where ${info.brandName} comes in. We've spent months creating ${info.offerings} that does what couples therapy wishes it could do - make connection FUN again.${formatFeatures(info.features, '1min')}${info.uniqueValue}. Picture this: you're both laughing so hard you can barely breathe. You're learning things about each other you never knew. You're feeling that electricity you thought was gone. All because you decided to try something different. ${info.targetAudience} everywhere are using this to transform their relationships. Not with boring exercises or awkward conversations. With genuine fun, real intimacy, and unforgettable moments.`
+              : `Here's what nobody tells ${info.targetAudience}: maintaining passion takes effort. Not the boring kind - the fun kind. ${info.brandName} understands this. We've created ${info.offerings} that makes strengthening your relationship feel like the best part of your week.${formatFeatures(info.features, '1min')}${info.uniqueValue}. Inside, you'll discover experiences that spark real conversations, activities that create genuine intimacy, and moments that remind you why you chose each other. This isn't about fixing what's broken. It's about making what's good even better. Because the best relationships aren't accidents - they're cultivated through intentional connection and playful exploration. That's exactly what we've built here.`
+          };
+          return relationshipScripts[length] || relationshipScripts['30s'];
+        }
+        
+        // Default scripts for other products
+        const featuresText = formatFeatures(info.features, length);
+        
+        const scripts = {
+          '10s': `Most ${info.targetAudience} face this exact problem. ${info.brandName} solves it in 3 steps.${featuresText} Ready?`,
+          '15s': `Here's the truth: ${info.targetAudience} waste hours on ${info.niche.toLowerCase()}. ${info.brandName} changes that. We offer ${info.offerings}.${featuresText} Simple, effective, proven.`,
+          '30s': `Let me guess - you're tired of struggling with ${info.niche.toLowerCase()}. Most ${info.targetAudience} are. That's exactly why we created ${info.brandName}. We offer ${info.offerings}, designed specifically for ${info.targetAudience}.${featuresText} What makes us diff'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Camera, Sparkles, Lock, Copy, Check, RefreshCw, Video, Save, Edit2, User, Hash, Monitor, ChevronDown, Star, Play, Pause, X, Plus, Trash2, Image, Music } from 'lucide-react';
@@ -20,6 +81,7 @@ export default function MarketingScriptGenerator() {
     targetAudience: '',
     offerings: '',
     uniqueValue: '',
+    features: '', // NEW: Key features
     additionalInfo: ''
   });
   
@@ -107,6 +169,7 @@ export default function MarketingScriptGenerator() {
       targetAudience: profile.targetAudience,
       offerings: profile.offerings,
       uniqueValue: profile.uniqueValue,
+      features: profile.features || '',
       additionalInfo: profile.additionalInfo
     });
     setSelectedProfile(profile);
@@ -127,6 +190,7 @@ export default function MarketingScriptGenerator() {
       targetAudience: '',
       offerings: '',
       uniqueValue: '',
+      features: '',
       additionalInfo: ''
     });
     setScripts([]);
@@ -672,12 +736,49 @@ export default function MarketingScriptGenerator() {
     // Include additional info in the enhancement
     const additionalContext = info.additionalInfo ? ` ${info.additionalInfo}` : '';
     
+    // Process features into marketing copy
+    const processFeatures = (featuresText) => {
+      if (!featuresText || featuresText.trim().length === 0) return [];
+      
+      // Split by line breaks or bullet points
+      const featureLines = featuresText
+        .split(/\n|•|-/)
+        .map(f => f.trim())
+        .filter(f => f.length > 0);
+      
+      // Create marketing copy for each feature
+      return featureLines.map(feature => {
+        // Remove numbers or bullets at start
+        const cleanFeature = feature.replace(/^\d+\.?\s*/, '').trim();
+        
+        // Add benefit-focused language
+        const benefitPhrases = [
+          'Experience',
+          'Enjoy',
+          'Get access to',
+          'Unlock',
+          'Discover',
+          'Benefit from'
+        ];
+        
+        const randomPhrase = benefitPhrases[Math.floor(Math.random() * benefitPhrases.length)];
+        
+        return {
+          original: cleanFeature,
+          marketing: `${randomPhrase} ${cleanFeature.toLowerCase()}`
+        };
+      });
+    };
+    
+    const featuresProcessed = processFeatures(info.features);
+    
     return {
       brandName: brandEnhanced,
       niche: nicheEnhanced,
       targetAudience: audienceEnhanced,
       offerings: offeringsEnhanced,
       uniqueValue: uniqueValueEnhanced + additionalContext,
+      features: featuresProcessed,
       additionalInfo: info.additionalInfo
     };
   };
