@@ -1040,7 +1040,581 @@ ${script.musicPrompt}`;
               </div>
             )}
           </div>
-        ) : null}
+        ) : (
+          <>
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-gray-800">Business Profile</h2>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition"
+                    >
+                      <User className="w-4 h-4" />
+                      Profiles
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    
+                    {showProfileDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                        <div className="p-3 border-b">
+                          <input
+                            type="text"
+                            placeholder="Profile name..."
+                            value={newProfileName}
+                            onChange={(e) => setNewProfileName(e.target.value)}
+                            className="w-full px-2 py-1 border rounded mb-2 text-sm"
+                          />
+                          <button
+                            onClick={saveProfile}
+                            className="w-full px-2 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 flex items-center justify-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Save Current
+                          </button>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto">
+                          {brandProfiles.length === 0 ? (
+                            <p className="text-gray-500 text-sm p-3">No saved profiles</p>
+                          ) : (
+                            brandProfiles.map(profile => (
+                              <div key={profile.id} className="flex items-center justify-between p-2 hover:bg-gray-50">
+                                <button
+                                  onClick={() => loadProfile(profile)}
+                                  className="flex-1 text-left text-sm"
+                                >
+                                  {profile.name}
+                                </button>
+                                <button
+                                  onClick={() => deleteProfile(profile.id)}
+                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {selectedProfile && (
+                  <div className="mb-4 p-2 bg-purple-50 rounded-lg text-sm text-purple-700">
+                    Loaded: {selectedProfile.name}
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Brand Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={businessInfo.brandName}
+                      onChange={(e) => setBusinessInfo({...businessInfo, brandName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Your brand name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Niche *
+                    </label>
+                    <input
+                      type="text"
+                      value={businessInfo.niche}
+                      onChange={(e) => setBusinessInfo({...businessInfo, niche: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="e.g., Fitness, Tech, Beauty"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Target Audience *
+                    </label>
+                    <input
+                      type="text"
+                      value={businessInfo.targetAudience}
+                      onChange={(e) => setBusinessInfo({...businessInfo, targetAudience: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Who are you targeting?"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      What You Offer *
+                    </label>
+                    <textarea
+                      value={businessInfo.offerings}
+                      onChange={(e) => setBusinessInfo({...businessInfo, offerings: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Products, services, solutions..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Unique Value Proposition *
+                    </label>
+                    <textarea
+                      value={businessInfo.uniqueValue}
+                      onChange={(e) => setBusinessInfo({...businessInfo, uniqueValue: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="What makes you different?"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Key Features (one per line)
+                    </label>
+                    <textarea
+                      value={businessInfo.features}
+                      onChange={(e) => setBusinessInfo({...businessInfo, features: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="90 unique cards across 3 decks
+30 intimate questions
+30 playful dares
+30 spicy challenges"
+                      rows={4}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">💡 List your product's key features (one per line). Each will be marketed separately!</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Additional Info
+                    </label>
+                    <textarea
+                      value={businessInfo.additionalInfo}
+                      onChange={(e) => setBusinessInfo({...businessInfo, additionalInfo: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                      placeholder="Anything else we should know?"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">Script Preferences</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Number of Scripts: {scriptPrefs.numScripts}
+                    </label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      value={scriptPrefs.numScripts}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, numScripts: parseInt(e.target.value)})}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>1</span>
+                      <span>5</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Video Length
+                    </label>
+                    <select
+                      value={scriptPrefs.length}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, length: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="10s">10 seconds</option>
+                      <option value="15s">15 seconds</option>
+                      <option value="30s">30 seconds</option>
+                      <option value="45s">45 seconds</option>
+                      <option value="1min">1 minute</option>
+                      <option value="1min15s">1 minute 15 seconds</option>
+                      <option value="1min30s">1 minute 30 seconds</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Platform
+                    </label>
+                    <select
+                      value={scriptPrefs.platform}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, platform: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="tiktok">TikTok</option>
+                      <option value="instagram">Instagram</option>
+                      <option value="youtube">YouTube</option>
+                      <option value="facebook">Facebook</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Script Tone/Voice
+                    </label>
+                    <select
+                      value={scriptPrefs.tone}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, tone: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="engaging">Engaging (Default)</option>
+                      <option value="playful">Playful & Fun</option>
+                      <option value="funny">Funny & Humorous</option>
+                      <option value="romantic">Romantic & Intimate</option>
+                      <option value="direct">Direct & Straightforward</option>
+                      <option value="motivational">Motivational & Inspiring</option>
+                      <option value="calm">Calm & Reassuring</option>
+                      <option value="bold">Bold & Confident</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={scriptPrefs.includeBroll}
+                      onChange={(e) => setScriptPrefs({...scriptPrefs, includeBroll: e.target.checked})}
+                      className="w-4 h-4 text-purple-600 rounded"
+                    />
+                    <label className="ml-2 text-sm font-semibold text-gray-700 flex items-center gap-1">
+                      <Camera className="w-4 h-4" />
+                      Include B-roll Suggestions & Pexels Videos
+                    </label>
+                  </div>
+
+                  <button
+                    onClick={generateScripts}
+                    disabled={isGenerating || !businessInfo.brandName || !businessInfo.niche}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Generate Scripts
+                      </>
+                    )}
+                  </button>
+
+                  {businessInfo.brandName && businessInfo.niche && (
+                    <button
+                      onClick={() => setShowEnhancedPreview(!showEnhancedPreview)}
+                      className="w-full mt-2 px-4 py-2 border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      {showEnhancedPreview ? 'Hide' : 'Preview'} Enhanced Version
+                    </button>
+                  )}
+
+                  {showEnhancedPreview && businessInfo.brandName && businessInfo.niche && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                      <h3 className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        ✨ SEO-Enhanced Preview
+                      </h3>
+                      {(() => {
+                        const enhanced = enhanceBusinessInfo(businessInfo);
+                        return (
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="font-semibold text-gray-600">Niche:</span>
+                              <p className="text-purple-700 italic">{enhanced.niche}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-600">Audience:</span>
+                              <p className="text-purple-700 italic">{enhanced.targetAudience}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-600">Offerings:</span>
+                              <p className="text-purple-700 italic">{enhanced.offerings}</p>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-600">Value:</span>
+                              <p className="text-purple-700 italic">{enhanced.uniqueValue}</p>
+                            </div>
+                            {enhanced.features && enhanced.features.length > 0 && (
+                              <div>
+                                <span className="font-semibold text-gray-600">Features (with marketing):</span>
+                                <ul className="text-purple-700 italic list-disc list-inside">
+                                  {enhanced.features.map((f, i) => (
+                                    <li key={i}>{f.marketing}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                      <p className="text-xs text-purple-600 mt-3">
+                        ℹ️ This is how your info will appear in scripts - professional & SEO-optimized!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {scripts.length > 0 && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800">Generated Scripts</h2>
+                <div className="space-y-4">
+                  {scripts.map((script, index) => (
+                    <div key={index} className="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
+                      {editingScript && editingScript.scriptIndex === index ? (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-xl font-bold text-purple-600">Editing: {editingScript.title}</h3>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={saveEditedScript}
+                                className="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition flex items-center gap-1"
+                              >
+                                <Check className="w-4 h-4" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingScript(null)}
+                                className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Hook</label>
+                            <input
+                              type="text"
+                              value={editingScript.hook}
+                              onChange={(e) => updateEditingScript('hook', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Script</label>
+                            <textarea
+                              value={editingScript.mainScript}
+                              onChange={(e) => updateEditingScript('mainScript', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                              rows={6}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Caption</label>
+                            <textarea
+                              value={editingScript.caption}
+                              onChange={(e) => updateEditingScript('caption', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                              rows={2}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">CTA</label>
+                            <input
+                              type="text"
+                              value={editingScript.cta}
+                              onChange={(e) => updateEditingScript('cta', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="text-xl font-bold text-purple-600">{script.title}</h3>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => saveScript(script)}
+                                className="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200 transition flex items-center gap-1"
+                              >
+                                <Star className="w-4 h-4" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => startEditing(script, index)}
+                                className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition flex items-center gap-1"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setTeleprompterScript(script);
+                                  setCurrentView('teleprompter');
+                                }}
+                                className="px-3 py-1 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition flex items-center gap-1"
+                              >
+                                <Monitor className="w-4 h-4" />
+                                Teleprompter
+                              </button>
+                              <button
+                                onClick={() => copyToClipboard(formatScript(script), index)}
+                                className="px-3 py-1 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition flex items-center gap-1"
+                              >
+                                {copiedIndex === index ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                Copy
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">Hook</div>
+                              <p className="text-gray-800 font-medium">{script.hook}</p>
+                            </div>
+                            
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">Script</div>
+                              <p className="text-gray-700 whitespace-pre-line">{script.mainScript}</p>
+                            </div>
+
+                            {script.featuresMarketing && script.featuresMarketing.length > 0 && (
+                              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <div className="text-xs font-bold text-purple-700 uppercase mb-2">✨ Key Features</div>
+                                <div className="grid grid-cols-1 gap-2">
+                                  {script.featuresMarketing.map((f, i) => (
+                                    <div key={i} className="flex items-start gap-2">
+                                      <span className="text-purple-600 font-bold">•</span>
+                                      <span className="text-sm text-purple-900">{f}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {script.brollSuggestions && script.brollSuggestions.length > 0 && (
+                              <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
+                                  <Camera className="w-3 h-3" />
+                                  B-roll Suggestions
+                                </div>
+                                <ul className="list-disc list-inside text-gray-700">
+                                  {script.brollSuggestions.map((b, i) => (
+                                    <li key={i}>{b}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {script.pexelsVideos && script.pexelsVideos.length > 0 && (
+                              <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                                  <Video className="w-3 h-3" />
+                                  Pexels Video B-roll
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {script.pexelsVideos.map((video, i) => (
+                                    <a
+                                      key={i}
+                                      href={video.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="relative group block rounded-lg overflow-hidden border border-gray-200 hover:border-purple-400 transition"
+                                    >
+                                      <img
+                                        src={video.thumbnail}
+                                        alt={video.description}
+                                        className="w-full h-24 object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition">
+                                        <Video className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition" />
+                                      </div>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">Caption</div>
+                              <p className="text-gray-700">{script.caption}</p>
+                            </div>
+
+                            {script.hashtags && (
+                              <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
+                                  <Hash className="w-3 h-3" />
+                                  Hashtags
+                                  <button
+                                    onClick={() => copyToClipboard(script.hashtags.join(' '), `hashtags-${index}`)}
+                                    className="ml-2 text-purple-600 hover:text-purple-700"
+                                  >
+                                    {copiedIndex === `hashtags-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                                <p className="text-sm text-purple-600">{script.hashtags.join(' ')}</p>
+                              </div>
+                            )}
+                            
+                            <div>
+                              <div className="text-xs font-bold text-gray-500 uppercase mb-1">CTA</div>
+                              <p className="text-gray-800 font-semibold">{script.cta}</p>
+                            </div>
+
+                            {script.logoPrompt && (
+                              <div className="border-t pt-3 mt-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                                  <Image className="w-3 h-3" />
+                                  AI Logo/Visual Prompt
+                                  <button
+                                    onClick={() => copyToClipboard(script.logoPrompt, `logo-${index}`)}
+                                    className="ml-2 text-purple-600 hover:text-purple-700"
+                                  >
+                                    {copiedIndex === `logo-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                                <p className="text-xs text-gray-600 bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                  {script.logoPrompt}
+                                </p>
+                                <p className="text-xs text-purple-600 mt-1">
+                                  💡 Use in MidJourney, DALL-E, or Leonardo.ai
+                                </p>
+                              </div>
+                            )}
+
+                            {script.musicPrompt && (
+                              <div className="border-t pt-3 mt-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
+                                  <Music className="w-3 h-3" />
+                                  Suno Music Prompt
+                                  <button
+                                    onClick={() => copyToClipboard(script.musicPrompt, `music-${index}`)}
+                                    className="ml-2 text-purple-600 hover:text-purple-700"
+                                  >
+                                    {copiedIndex === `music-${index}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                                <p className="text-xs text-gray-600 bg-green-50 p-3 rounded-lg border border-green-100">
+                                  {script.musicPrompt}
+                                </p>
+                                <p className="text-xs text-green-600 mt-1">
+                                  🎵 Use in Suno.ai for perfect background music
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
