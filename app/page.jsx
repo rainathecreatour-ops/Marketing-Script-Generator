@@ -858,13 +858,24 @@ ${script.musicPrompt}`;
   };
 
   const saveEditedScript = () => {
-    const index = scripts.findIndex(s => s === editingScript);
+    const index = scripts.findIndex(s => s.title === editingScript.title && s.hook === (editingScript.originalHook || editingScript.hook));
     if (index !== -1) {
       const newScripts = [...scripts];
-      newScripts[index] = editingScript;
+      // Preserve original fields we don't edit
+      newScripts[index] = {
+        ...newScripts[index],
+        ...editingScript
+      };
       setScripts(newScripts);
     }
     setEditingScript(null);
+  };
+
+  const startEditing = (script) => {
+    setEditingScript({
+      ...script,
+      originalHook: script.hook // Store original for finding it later
+    });
   };
 
   if (!isUnlocked) {
@@ -1340,7 +1351,7 @@ ${script.musicPrompt}`;
                       {editingScript === script ? (
                         <div className="space-y-4">
                           <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-xl font-bold text-purple-600">Editing: {script.title}</h3>
+                            <h3 className="text-xl font-bold text-purple-600">Editing: {editingScript.title}</h3>
                             <div className="flex gap-2">
                               <button
                                 onClick={saveEditedScript}
@@ -1361,6 +1372,7 @@ ${script.musicPrompt}`;
                           <div>
                             <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Hook</label>
                             <input
+                              type="text"
                               value={editingScript.hook}
                               onChange={(e) => updateEditingScript('hook', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
@@ -1390,6 +1402,7 @@ ${script.musicPrompt}`;
                           <div>
                             <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">CTA</label>
                             <input
+                              type="text"
                               value={editingScript.cta}
                               onChange={(e) => updateEditingScript('cta', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
@@ -1409,7 +1422,7 @@ ${script.musicPrompt}`;
                                 Save
                               </button>
                               <button
-                                onClick={() => setEditingScript(script)}
+                                onClick={() => startEditing(script)}
                                 className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition flex items-center gap-1"
                               >
                                 <Edit2 className="w-4 h-4" />
