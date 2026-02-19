@@ -928,7 +928,7 @@ export default function MarketingScriptGenerator() {
                                     </button>
                                   </div>
                                   <p className="text-xs text-gray-600 bg-purple-50 p-3 rounded-lg border border-purple-100">{script.logoPrompt}</p>
-                                  <p className="text-xs text-purple-600 mt-1">💡 Use in MidJourney, DALL-E, or Leonardo.ai</p>
+                                  <p className="text-xs text-purple-600 mt-1">💡 Use in MidJourney, Google ImageFX, DALL-E, or Leonardo.ai</p>
                                 </div>
                               )}
 
