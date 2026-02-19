@@ -200,9 +200,8 @@ export default function MarketingScriptGenerator() {
 
   // ---------- ENHANCE ----------
   const enhanceBusinessInfo = (info, featuresArr) => {
-    const summarize = (text, max = 100) => {
-      if (!text || text.length <= max) return text || '';
-      return text.substring(0, max).trim() + '...';
+    const summarize = (text) => {
+      return (text || '').trim();
     };
 
     const nicheMap = {
@@ -233,7 +232,7 @@ export default function MarketingScriptGenerator() {
       brandName: info.brandName,
       niche: nicheEnhanced,
       targetAudience: audienceEnhanced,
-      offerings: summarize(info.offerings, 150),
+      offerings: summarize(info.offerings),
       features: cleanedFeatures,
       additionalInfo: info.additionalInfo
     };
