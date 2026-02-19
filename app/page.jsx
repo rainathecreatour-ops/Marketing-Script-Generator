@@ -465,7 +465,38 @@ export default function MarketingScriptGenerator() {
     // Smart AI-powered summarization and SEO enhancement
     const brandEnhanced = info.brandName;
     
-    // Extract key benefits and features from long descriptions
+    // Summarize NICHE if it's long
+    const summarizeNiche = (text) => {
+      if (text.length > 50) {
+        // Extract core niche from longer descriptions
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes('game') && lowerText.includes('couples')) {
+          return 'couples games and relationship activities';
+        }
+        if (lowerText.includes('course')) return 'educational courses';
+        if (lowerText.includes('coaching')) return 'coaching services';
+        if (lowerText.includes('consulting')) return 'consulting services';
+        // Return first few words if can't identify
+        return text.split(' ').slice(0, 5).join(' ');
+      }
+      return text;
+    };
+    
+    // Summarize TARGET AUDIENCE if it's long
+    const summarizeAudience = (text) => {
+      if (text.length > 50) {
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes('couples')) return 'couples';
+        if (lowerText.includes('entrepreneur')) return 'entrepreneurs';
+        if (lowerText.includes('business')) return 'business owners';
+        if (lowerText.includes('creator')) return 'content creators';
+        // Return first few words
+        return text.split(' ').slice(0, 4).join(' ');
+      }
+      return text;
+    };
+    
+    // Extract key benefits and features from OFFERINGS (this should be summarized)
     const summarizeOfferings = (text) => {
       // If it's long, extract the core value
       if (text.length > 150) {
@@ -474,23 +505,49 @@ export default function MarketingScriptGenerator() {
           return 'interactive couples game with intimate questions, playful dares, and spicy challenges';
         }
         if (text.toLowerCase().includes('course') || text.toLowerCase().includes('program')) {
-          return 'comprehensive transformation program with proven results';
+          return 'comprehensive transformation program with step-by-step guidance';
         }
         if (text.toLowerCase().includes('ebook') || text.toLowerCase().includes('guide')) {
-          return 'actionable step-by-step guide with expert strategies';
+          return 'actionable guide with proven strategies and frameworks';
         }
         if (text.toLowerCase().includes('service') || text.toLowerCase().includes('consulting')) {
-          return 'premium done-for-you service with personalized support';
+          return 'premium done-for-you service with expert support';
         }
         if (text.toLowerCase().includes('software') || text.toLowerCase().includes('app') || text.toLowerCase().includes('tool')) {
-          return 'powerful digital tool that streamlines your workflow';
+          return 'powerful digital solution that simplifies your workflow';
         }
         // Generic enhancement for long text
-        const words = text.split(' ').slice(0, 15).join(' ');
-        return words + '...';
+        const sentences = text.split('.').filter(s => s.trim().length > 0);
+        if (sentences.length > 0) {
+          // Take first sentence and condense it
+          const firstSentence = sentences[0].trim();
+          if (firstSentence.length > 100) {
+            return firstSentence.substring(0, 100) + '...';
+          }
+          return firstSentence;
+        }
       }
-      return `premium ${text} that delivers real results`;
+      return text;
     };
+    
+    // Summarize UNIQUE VALUE if it's long
+    const summarizeValue = (text) => {
+      if (text.length > 100) {
+        // Just take the essence
+        const sentences = text.split('.').filter(s => s.trim().length > 0);
+        if (sentences.length > 0) {
+          return sentences[0].trim();
+        }
+        return text.substring(0, 80) + '...';
+      }
+      return text;
+    };
+    
+    // Now enhance with professional terminology
+    const nicheBase = summarizeNiche(info.niche);
+    const audienceBase = summarizeAudience(info.targetAudience);
+    const offeringsBase = summarizeOfferings(info.offerings);
+    const valueBase = summarizeValue(info.uniqueValue);
     
     // Enhance niche with professional, SEO-friendly terminology
     const nicheMap = {
@@ -554,9 +611,9 @@ export default function MarketingScriptGenerator() {
       'instagram': 'Instagram growth and visual storytelling'
     };
     
-    let nicheEnhanced = info.niche;
+    let nicheEnhanced = nicheBase;
     for (const [key, value] of Object.entries(nicheMap)) {
-      if (info.niche.toLowerCase().includes(key)) {
+      if (nicheBase.toLowerCase().includes(key)) {
         nicheEnhanced = value;
         break;
       }
@@ -591,33 +648,36 @@ export default function MarketingScriptGenerator() {
       'gen z': 'innovative Gen Z pioneers and trend-setters'
     };
     
-    let audienceEnhanced = info.targetAudience;
+    let audienceEnhanced = audienceBase;
     for (const [key, value] of Object.entries(audienceMap)) {
-      if (info.targetAudience.toLowerCase().includes(key)) {
+      if (audienceBase.toLowerCase().includes(key)) {
         audienceEnhanced = value;
         break;
       }
     }
     
     // If no match, add motivational prefix
-    if (audienceEnhanced === info.targetAudience) {
-      audienceEnhanced = `motivated ${info.targetAudience} ready for transformation`;
+    if (audienceEnhanced === audienceBase && audienceBase.length < 50) {
+      audienceEnhanced = `motivated ${audienceBase} ready for transformation`;
     }
     
-    // Enhance offerings with smart summarization
-    const offeringsEnhanced = summarizeOfferings(info.offerings);
+    // Use the summarized offerings directly
+    const offeringsEnhanced = offeringsBase;
     
     // Enhance unique value with credibility markers
-    const uniqueValueEnhanced = info.uniqueValue.length > 80
-      ? info.uniqueValue
-      : `${info.uniqueValue} - proven by thousands of satisfied customers`;
+    const uniqueValueEnhanced = valueBase.length > 80
+      ? valueBase
+      : `${valueBase} - proven by thousands of satisfied customers`;
+    
+    // Include additional info in the enhancement
+    const additionalContext = info.additionalInfo ? ` ${info.additionalInfo}` : '';
     
     return {
       brandName: brandEnhanced,
       niche: nicheEnhanced,
       targetAudience: audienceEnhanced,
       offerings: offeringsEnhanced,
-      uniqueValue: uniqueValueEnhanced,
+      uniqueValue: uniqueValueEnhanced + additionalContext,
       additionalInfo: info.additionalInfo
     };
   };
@@ -858,23 +918,29 @@ ${script.musicPrompt}`;
   };
 
   const saveEditedScript = () => {
-    const index = scripts.findIndex(s => s.title === editingScript.title && s.hook === (editingScript.originalHook || editingScript.hook));
-    if (index !== -1) {
-      const newScripts = [...scripts];
-      // Preserve original fields we don't edit
-      newScripts[index] = {
-        ...newScripts[index],
-        ...editingScript
-      };
-      setScripts(newScripts);
-    }
+    const newScripts = scripts.map(s => {
+      // Match by title and comparing original hook
+      if (s.title === editingScript.title && s.hook === editingScript.originalHook) {
+        // Return edited version but keep fields we don't edit
+        return {
+          ...s,
+          hook: editingScript.hook,
+          mainScript: editingScript.mainScript,
+          caption: editingScript.caption,
+          cta: editingScript.cta
+        };
+      }
+      return s;
+    });
+    setScripts(newScripts);
     setEditingScript(null);
   };
 
-  const startEditing = (script) => {
+  const startEditing = (script, index) => {
     setEditingScript({
       ...script,
-      originalHook: script.hook // Store original for finding it later
+      originalHook: script.hook,
+      scriptIndex: index // Track which script we're editing
     });
   };
 
@@ -1348,7 +1414,7 @@ ${script.musicPrompt}`;
                 <div className="space-y-4">
                   {scripts.map((script, index) => (
                     <div key={index} className="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
-                      {editingScript === script ? (
+                      {editingScript && editingScript.scriptIndex === index ? (
                         <div className="space-y-4">
                           <div className="flex justify-between items-center mb-3">
                             <h3 className="text-xl font-bold text-purple-600">Editing: {editingScript.title}</h3>
@@ -1422,7 +1488,7 @@ ${script.musicPrompt}`;
                                 Save
                               </button>
                               <button
-                                onClick={() => startEditing(script)}
+                                onClick={() => startEditing(script, index)}
                                 className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition flex items-center gap-1"
                               >
                                 <Edit2 className="w-4 h-4" />
