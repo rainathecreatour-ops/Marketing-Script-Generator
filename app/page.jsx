@@ -611,54 +611,85 @@ export default function MarketingScriptGenerator() {
           if (!features || features.length === 0) return '';
           
           if (length === '10s' || length === '15s') {
-            return features.length > 0 ? ` With ${features.length} game-changing features included.` : '';
+            return features.length > 0 ? ` With ${features.length} game-changing features.` : '';
           }
           
           if (length === '30s') {
-            const topFeatures = features.slice(0, 2);
-            return topFeatures.length > 0 
-              ? ` Inside: ${topFeatures.map(f => f.original).join(', and ')}.`
-              : '';
+            return features.length > 0 ? ` Key features included.` : '';
           }
           
-          if (length === '45s' || length === '1min') {
-            const topFeatures = features.slice(0, 3);
-            return topFeatures.length > 0
-              ? ` What you get: ${topFeatures.map(f => f.marketing).join('. ')}. `
-              : '';
-          }
-          
-          const allFeatures = features.slice(0, 5);
-          return allFeatures.length > 0
-            ? ` Here's what's inside: ${allFeatures.map((f, i) => `${i === 0 ? '' : ' '}${f.marketing}`).join('.')}. `
-            : '';
+          return '';
         };
         
+        // RELATIONSHIP SCRIPTS - TRULY DIFFERENT TONES
         if (info.niche.toLowerCase().includes('relationship') || info.niche.toLowerCase().includes('couples') || info.niche.toLowerCase().includes('dating')) {
           const featuresText = formatFeatures(info.features, length);
           
-          const relationshipScripts = {
-            '30s': tone === 'playful'
-              ? `Look, we get it. Date nights have become predictable. Same restaurant, same conversations, same... everything. That's why we created ${info.brandName}. It's ${info.offerings} that brings back the fun, the laughter, and yeah - the heat.${featuresText} ${info.uniqueValue}. No boring dinners. Just pure connection.`
-              : `Most ${info.targetAudience} fall into the routine trap. ${info.brandName} breaks that cycle. We offer ${info.offerings} specifically designed to reignite connection.${featuresText} ${info.uniqueValue}. Transform ordinary nights into unforgettable moments.`,
-            '45s': tone === 'playful'
-              ? `Honest question: when's the last time you and your partner did something NEW together? Not dinner at the usual spot. Not the same Netflix shows. Something actually exciting? If you can't remember, that's exactly why ${info.brandName} exists. We've created ${info.offerings} packed with experiences that'll make you think, laugh, and connect.${featuresText}${info.uniqueValue}. This isn't your grandma's date night. This is connection on a whole new level. Ready to stop being boring?`
-              : `The routine is killing your relationship. You might not realize it yet, but those same conversations, same patterns, same everything - they're slowly draining the life from what you have. ${info.brandName} is the antidote. ${info.offerings} designed specifically for ${info.targetAudience} ready to break free from the mundane.${featuresText}${info.uniqueValue}. Every moment brings you closer. This is how great relationships stay great.`,
-            '1min': tone === 'playful'
-              ? `Alright, real talk time. Your relationship isn't broken. You're not in trouble. But if we're being honest? You're in a rut. Same dates. Same talks. Same routine. And here's the thing - you both feel it, but nobody's saying anything. That's where ${info.brandName} comes in. We've spent months creating ${info.offerings} that does what couples therapy wishes it could do - make connection FUN again.${formatFeatures(info.features, '1min')}${info.uniqueValue}. Picture this: you're both laughing so hard you can barely breathe. You're learning things about each other you never knew. You're feeling that electricity you thought was gone. All because you decided to try something different. ${info.targetAudience} everywhere are using this to transform their relationships. Not with boring exercises or awkward conversations. With genuine fun, real intimacy, and unforgettable moments.`
-              : `Here's what nobody tells ${info.targetAudience}: maintaining passion takes effort. Not the boring kind - the fun kind. ${info.brandName} understands this. We've created ${info.offerings} that makes strengthening your relationship feel like the best part of your week.${formatFeatures(info.features, '1min')}${info.uniqueValue}. Inside, you'll discover experiences that spark real conversations, activities that create genuine intimacy, and moments that remind you why you chose each other. This isn't about fixing what's broken. It's about making what's good even better. Because the best relationships aren't accidents - they're cultivated through intentional connection and playful exploration. That's exactly what we've built here.`
-          };
-          return relationshipScripts[length] || relationshipScripts['30s'];
+          if (tone === 'playful') {
+            return `Look, your relationship doesn't suck. But it's gotten... predictable, right? Same dinner spots, same Netflix routine, same conversations. ${info.brandName} is here to fix that. We're ${info.offerings} and honestly? It's way more fun than therapy.${featuresText} ${info.uniqueValue}. Ready to actually enjoy date night again?`;
+          }
+          
+          if (tone === 'funny') {
+            return `Relationship status: "It's fine." Translation: You're scrolling on your phones during dinner. Your idea of excitement is ordering from a different restaurant. You need ${info.brandName}. We made ${info.offerings} because apparently couples forgot how to have fun.${featuresText} ${info.uniqueValue}. Your relationship will thank you.`;
+          }
+          
+          if (tone === 'romantic') {
+            return `Close your eyes. Remember your first date? That nervous excitement. The butterflies. The way time disappeared when you were together. That feeling didn't die. It's just sleeping. ${info.brandName} wakes it up. ${info.offerings} designed to bring back every spark, every laugh, every moment that made you fall in love.${featuresText} ${info.uniqueValue}.`;
+          }
+          
+          if (tone === 'direct') {
+            return `Your relationship has a routine problem. You're stuck in patterns. Same activities, same conversations, same everything. ${info.brandName} breaks that. ${info.offerings} that creates new experiences and deeper connection.${featuresText} ${info.uniqueValue}. Simple solution to a common problem.`;
+          }
+          
+          if (tone === 'motivational') {
+            return `Every great relationship requires intentional effort. Not boring effort - exciting effort. ${info.brandName} makes that easy. ${info.offerings} transforms date nights from obligation to adventure.${featuresText} ${info.uniqueValue}. Your relationship deserves this.`;
+          }
+          
+          if (tone === 'bold') {
+            return `Stop settling for boring date nights. Stop accepting "fine" as your relationship status. You deserve passionate, exciting, fun connection. ${info.brandName} delivers that. ${info.offerings} that refuses to let your relationship become average.${featuresText} ${info.uniqueValue}. Take action now.`;
+          }
+          
+          if (tone === 'calm') {
+            return `Feeling distant from your partner isn't a crisis. It's normal. Life gets busy. Routines set in. ${info.brandName} gently brings you back together. ${info.offerings} creates space for real connection without pressure or awkwardness.${featuresText} ${info.uniqueValue}. Reconnect naturally.`;
+          }
+          
+          // Default engaging
+          return `Most ${info.targetAudience} fall into the routine trap. ${info.brandName} breaks that cycle. We offer ${info.offerings} specifically designed to reignite connection.${featuresText} ${info.uniqueValue}. Transform ordinary nights into unforgettable moments.`;
         }
         
+        // GENERAL PRODUCT SCRIPTS - TRULY DIFFERENT TONES
         const featuresText = formatFeatures(info.features, length);
         
-        const scripts = {
-          '10s': `Most ${info.targetAudience} face this exact problem. ${info.brandName} solves it in 3 steps.${featuresText} Ready?`,
-          '15s': `Here's the truth: ${info.targetAudience} waste hours on ${info.niche.toLowerCase()}. ${info.brandName} changes that. We offer ${info.offerings}.${featuresText} Simple, effective, proven.`,
-          '30s': `Let me guess - you're tired of struggling with ${info.niche.toLowerCase()}. Most ${info.targetAudience} are. That's exactly why we created ${info.brandName}. We offer ${info.offerings}, designed specifically for ${info.targetAudience}.${featuresText} What makes us different? ${info.uniqueValue}. No fluff, just results.`
-        };
-        return scripts[length] || scripts['30s'];
+        if (tone === 'playful') {
+          return `Okay so ${info.niche.toLowerCase()} is usually boring, right? Yeah, we thought so too. That's why ${info.brandName} exists. ${info.offerings} but actually fun this time.${featuresText} ${info.uniqueValue}. Try it and you'll get it.`;
+        }
+        
+        if (tone === 'funny') {
+          return `Remember when you thought ${info.niche.toLowerCase()} would be easy? LOL same. Turns out it's annoying. ${info.brandName} makes it less annoying. ${info.offerings} that won't make you want to quit.${featuresText} ${info.uniqueValue}. You're welcome.`;
+        }
+        
+        if (tone === 'romantic') {
+          return `There's something special about ${info.niche.toLowerCase()} when it's done right. ${info.brandName} understands that. ${info.offerings} crafted with care and attention to detail.${featuresText} ${info.uniqueValue}. Feel the difference.`;
+        }
+        
+        if (tone === 'direct') {
+          return `${info.targetAudience} need ${info.niche.toLowerCase()} solutions. ${info.brandName} provides them. ${info.offerings} that works.${featuresText} ${info.uniqueValue}. That's it.`;
+        }
+        
+        if (tone === 'motivational') {
+          return `You have the potential to excel in ${info.niche.toLowerCase()}. ${info.brandName} helps you unlock it. ${info.offerings} designed to elevate your results.${featuresText} ${info.uniqueValue}. Start your transformation today.`;
+        }
+        
+        if (tone === 'bold') {
+          return `Stop wasting time on mediocre ${info.niche.toLowerCase()}. ${info.brandName} demands excellence. ${info.offerings} for people who refuse to settle.${featuresText} ${info.uniqueValue}. Join the best.`;
+        }
+        
+        if (tone === 'calm') {
+          return `${info.niche.toLowerCase()} doesn't have to be stressful. ${info.brandName} makes it simple. ${info.offerings} that brings peace of mind.${featuresText} ${info.uniqueValue}. Everything will be okay.`;
+        }
+        
+        // Default engaging
+        return `Let me guess - you're tired of struggling with ${info.niche.toLowerCase()}. Most ${info.targetAudience} are. That's exactly why we created ${info.brandName}. We offer ${info.offerings}, designed specifically for ${info.targetAudience}.${featuresText} What makes us different? ${info.uniqueValue}. No fluff, just results.`;
       },
       getCTA: (info) => `Ready to transform your ${info.niche.toLowerCase()}? Check the link in bio!`,
       getBrollKeywords: (info) => [`${info.niche} problem`, `frustrated ${info.targetAudience}`, `${info.niche} solution`, `happy customer success`]
@@ -753,7 +784,8 @@ export default function MarketingScriptGenerator() {
           hashtags: hashtags,
           cta: template.getCTA(enhancedInfo),
           logoPrompt: logoPrompt,
-          musicPrompt: musicPrompt
+          musicPrompt: musicPrompt,
+          featuresMarketing: enhancedInfo.features.map(f => f.marketing)
         };
       }));
 
