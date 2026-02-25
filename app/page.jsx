@@ -13,7 +13,6 @@ export default function MarketingScriptGenerator() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
 
-  // Features as an array of strings
   const [features, setFeatures] = useState(['']);
 
   const [businessInfo, setBusinessInfo] = useState({
@@ -37,7 +36,6 @@ export default function MarketingScriptGenerator() {
   const [savedScripts, setSavedScripts] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
-  // editingScript: { scriptIndex, hook, mainScript, caption, cta, title, featureScripts }
   const [editingScript, setEditingScript] = useState(null);
   const editingRef = useRef(editingScript);
   useEffect(() => { editingRef.current = editingScript; }, [editingScript]);
@@ -49,15 +47,51 @@ export default function MarketingScriptGenerator() {
   const [scrollSpeed, setScrollSpeed] = useState(2);
   const [scrollPosition, setScrollPosition] = useState(0);
 
+  const [storageReady, setStorageReady] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
+
+  // ---------- STORAGE HELPERS ----------
+  const storageGet = async (key) => {
+    try {
+      const result = await window.storage.get(key);
+      return result ? JSON.parse(result.value) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const storageSet = async (key, value) => {
+    try {
+      await window.storage.set(key, JSON.stringify(value));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // ---------- LOAD FROM STORAGE ON MOUNT ----------
   useEffect(() => {
-    const saved = localStorage.getItem('savedScripts');
-    if (saved) setSavedScripts(JSON.parse(saved));
-    const profiles = localStorage.getItem('brandProfiles');
-    if (profiles) setBrandProfiles(JSON.parse(profiles));
+    const loadData = async () => {
+      const saved = await storageGet('savedScripts');
+      if (saved) setSavedScripts(saved);
+      const profiles = await storageGet('brandProfiles');
+      if (profiles) setBrandProfiles(profiles);
+      setStorageReady(true);
+    };
+    loadData();
   }, []);
 
-  useEffect(() => { localStorage.setItem('savedScripts', JSON.stringify(savedScripts)); }, [savedScripts]);
-  useEffect(() => { localStorage.setItem('brandProfiles', JSON.stringify(brandProfiles)); }, [brandProfiles]);
+  // ---------- PERSIST SAVED SCRIPTS ----------
+  useEffect(() => {
+    if (!storageReady) return;
+    storageSet('savedScripts', savedScripts);
+  }, [savedScripts, storageReady]);
+
+  // ---------- PERSIST BRAND PROFILES ----------
+  useEffect(() => {
+    if (!storageReady) return;
+    storageSet('brandProfiles', brandProfiles);
+  }, [brandProfiles, storageReady]);
 
   useEffect(() => {
     let interval;
@@ -128,12 +162,19 @@ export default function MarketingScriptGenerator() {
   };
 
   // ---------- PROFILES ----------
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!newProfileName.trim()) { alert('Please enter a profile name'); return; }
     const profile = { id: Date.now(), name: newProfileName, ...businessInfo, featuresArr: features };
-    setBrandProfiles([...brandProfiles, profile]);
+    const updated = [...brandProfiles, profile];
+    setBrandProfiles(updated);
+    const ok = await storageSet('brandProfiles', updated);
     setNewProfileName('');
-    alert('Profile "' + newProfileName + '" saved!');
+    if (ok) {
+      setSaveStatus('profile');
+      setTimeout(() => setSaveStatus(''), 2000);
+    } else {
+      alert('Profile "' + newProfileName + '" saved to session (storage unavailable).');
+    }
   };
 
   const loadProfile = (profile) => {
@@ -167,10 +208,17 @@ export default function MarketingScriptGenerator() {
   };
 
   // ---------- SAVED SCRIPTS ----------
-  const saveScript = (script) => {
+  const saveScript = async (script) => {
     const scriptWithId = { ...script, id: Date.now(), savedAt: new Date().toISOString(), brandName: businessInfo.brandName };
-    setSavedScripts([scriptWithId, ...savedScripts]);
-    alert('Script saved!');
+    const updated = [scriptWithId, ...savedScripts];
+    setSavedScripts(updated);
+    const ok = await storageSet('savedScripts', updated);
+    if (ok) {
+      setSaveStatus('script');
+      setTimeout(() => setSaveStatus(''), 2000);
+    } else {
+      alert('Script saved to session (storage unavailable).');
+    }
   };
 
   const deleteSavedScript = (id) => {
@@ -200,10 +248,6 @@ export default function MarketingScriptGenerator() {
 
   // ---------- ENHANCE ----------
   const enhanceBusinessInfo = (info, featuresArr) => {
-    const summarize = (text) => {
-      return (text || '').trim();
-    };
-
     const nicheMap = {
       'fitness': 'health and fitness transformation', 'tech': 'cutting-edge technology solutions',
       'beauty': 'premium beauty and skincare excellence', 'food': 'culinary excellence',
@@ -232,7 +276,7 @@ export default function MarketingScriptGenerator() {
       brandName: info.brandName,
       niche: nicheEnhanced,
       targetAudience: audienceEnhanced,
-      offerings: summarize(info.offerings),
+      offerings: (info.offerings || '').trim(),
       features: cleanedFeatures,
       additionalInfo: info.additionalInfo
     };
@@ -464,8 +508,7 @@ export default function MarketingScriptGenerator() {
     return formatted;
   };
 
-  // ---------- EDITING — FIXED ----------
-  // We use a completely separate editing state that does NOT get cleared by re-renders
+  // ---------- EDITING ----------
   const startEditing = (script, index) => {
     setEditingScript({ ...script, scriptIndex: index });
   };
@@ -564,6 +607,14 @@ export default function MarketingScriptGenerator() {
   // ---------- MAIN UI ----------
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Save Status Toast */}
+      {saveStatus && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-pulse">
+          <Check className="w-4 h-4" />
+          {saveStatus === 'script' ? 'Script saved successfully!' : 'Profile saved successfully!'}
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-6 px-4 shadow-lg">
         <div className="max-w-6xl mx-auto">
@@ -658,7 +709,7 @@ export default function MarketingScriptGenerator() {
                   </div>
                 </div>
 
-                {/* ✨ FEATURES SECTION */}
+                {/* FEATURES SECTION */}
                 <div className="mt-5">
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
